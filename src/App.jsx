@@ -18,6 +18,9 @@ function App() {
     telefoneMae: ''
   })
 
+  const [showModal, setShowModal] = useState(false)
+  const [pendingAction, setPendingAction] = useState(null)
+
   useEffect(() => {
     // Lê os parâmetros da URL
     const params = new URLSearchParams(window.location.search)
@@ -44,18 +47,52 @@ function App() {
     return phone
   }
 
-  const handleCall = (phone) => {
+  const handleCall = (phone, showPromo = true) => {
     if (phone) {
       const cleaned = phone.replace(/\D/g, '')
-      window.location.href = `tel:${cleaned}`
+      if (showPromo) {
+        setPendingAction(() => () => {
+          window.location.href = `tel:${cleaned}`
+        })
+        setShowModal(true)
+      } else {
+        window.location.href = `tel:${cleaned}`
+      }
     }
   }
 
-  const handleWhatsApp = (phone) => {
+  const handleWhatsApp = (phone, responsibleName, showPromo = true) => {
     if (phone) {
       const cleaned = phone.replace(/\D/g, '')
-      window.open(`https://wa.me/55${cleaned}`, '_blank')
+      const message = `Olá ${responsibleName}, tudo bem? Achei os pertences da ${info.nomeCrianca || 'criança'}`
+      const encodedMessage = encodeURIComponent(message)
+      const whatsappUrl = `https://wa.me/55${cleaned}?text=${encodedMessage}`
+      
+      if (showPromo) {
+        setPendingAction(() => () => {
+          window.open(whatsappUrl, '_blank')
+        })
+        setShowModal(true)
+      } else {
+        window.open(whatsappUrl, '_blank')
+      }
     }
+  }
+
+  const handleContinue = () => {
+    if (pendingAction) {
+      pendingAction()
+    }
+    setShowModal(false)
+    setPendingAction(null)
+  }
+
+  const handleSkip = () => {
+    setShowModal(false)
+    if (pendingAction) {
+      pendingAction()
+    }
+    setPendingAction(null)
   }
 
   const hasInfo = Object.values(info).some(value => value !== '')
@@ -79,81 +116,128 @@ function App() {
 
   return (
     <div className="app">
+      {showModal && (
+        <div className="modal-overlay" onClick={handleSkip}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <button className="modal-close" onClick={handleSkip}>×</button>
+            <div className="modal-body">
+              <div className="modal-logo">3DIdeas</div>
+              <h3 className="modal-title">Tags NFC Personalizadas</h3>
+              <p className="modal-text">
+                Esta tag foi feita pela <strong>3DIdeas</strong>!
+              </p>
+              <p className="modal-text">
+                Procurando uma solução segura para identificar itens das crianças?
+                Nossas tags NFC são personalizadas, duráveis e fáceis de usar.
+              </p>
+              <div className="modal-features">
+                <div className="modal-feature">✓ Personalização completa</div>
+                <div className="modal-feature">✓ Impressão 3D de qualidade</div>
+                <div className="modal-feature">✓ Fácil instalação</div>
+              </div>
+              <div className="modal-actions">
+                <button className="modal-btn modal-btn-primary" onClick={handleContinue}>
+                  Continuar contato
+                </button>
+                <button className="modal-btn modal-btn-secondary" onClick={handleSkip}>
+                  Fechar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       <div className="container">
         <header>
-          <h1>Informações de Contato</h1>
           {info.nomeCrianca && (
-            <div className="child-badge">
-              <span className="child-icon">👶</span>
-              <span className="child-name">{info.nomeCrianca}</span>
-            </div>
+            <>
+              <p className="header-subtitle">Você achou os pertences da</p>
+              <h1 className="child-name">{info.nomeCrianca}</h1>
+              <p className="header-instruction">Clique nos botões abaixo para entrar em contato com os responsáveis</p>
+            </>
           )}
         </header>
 
-        <div className="info-grid">
-          {info.nomePai && (
-            <div className="info-card">
-              <div className="card-header">
-                <span className="icon">👨</span>
-                <h2>Pai</h2>
-              </div>
-              <div className="card-content">
-                <p className="name">{info.nomePai}</p>
-                {info.telefonePai && (
-                  <div className="contact-buttons">
-                    <button 
-                      className="btn btn-phone" 
-                      onClick={() => handleCall(info.telefonePai)}
-                      title="Ligar"
-                    >
-                      📞 {formatPhone(info.telefonePai)}
-                    </button>
-                    <button 
-                      className="btn btn-whatsapp" 
-                      onClick={() => handleWhatsApp(info.telefonePai)}
-                      title="WhatsApp"
-                    >
-                      💬 WhatsApp
-                    </button>
+        {(info.nomePai || info.nomeMae || info.telefonePai || info.telefoneMae) && (
+          <div className="responsibles-section">
+            <h2 className="section-title">Dados Responsáveis</h2>
+            <div className="responsibles-content">
+              {info.nomePai && (
+                <div className="responsible-item responsible-item-pai">
+                  <div className="responsible-header">
+                    <span className="responsible-label">Pai:</span>
+                    <span className="responsible-name">{info.nomePai}</span>
                   </div>
-                )}
-              </div>
-            </div>
-          )}
+                  {info.telefonePai && (
+                    <div className="contact-buttons">
+                      <button 
+                        className="btn btn-phone" 
+                        onClick={() => handleCall(info.telefonePai)}
+                      >
+                        Ligar {formatPhone(info.telefonePai)}
+                      </button>
+                      <button 
+                        className="btn btn-whatsapp" 
+                        onClick={() => handleWhatsApp(info.telefonePai, info.nomePai)}
+                      >
+                        WhatsApp
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
 
-          {info.nomeMae && (
-            <div className="info-card">
-              <div className="card-header">
-                <span className="icon">👩</span>
-                <h2>Mãe</h2>
-              </div>
-              <div className="card-content">
-                <p className="name">{info.nomeMae}</p>
-                {info.telefoneMae && (
-                  <div className="contact-buttons">
-                    <button 
-                      className="btn btn-phone" 
-                      onClick={() => handleCall(info.telefoneMae)}
-                      title="Ligar"
-                    >
-                      📞 {formatPhone(info.telefoneMae)}
-                    </button>
-                    <button 
-                      className="btn btn-whatsapp" 
-                      onClick={() => handleWhatsApp(info.telefoneMae)}
-                      title="WhatsApp"
-                    >
-                      💬 WhatsApp
-                    </button>
+              {info.nomeMae && (
+                <div className="responsible-item responsible-item-mae">
+                  <div className="responsible-header">
+                    <span className="responsible-label">Mãe:</span>
+                    <span className="responsible-name">{info.nomeMae}</span>
                   </div>
-                )}
-              </div>
+                  {info.telefoneMae && (
+                    <div className="contact-buttons">
+                      <button 
+                        className="btn btn-phone" 
+                        onClick={() => handleCall(info.telefoneMae)}
+                      >
+                        Ligar {formatPhone(info.telefoneMae)}
+                      </button>
+                      <button 
+                        className="btn btn-whatsapp" 
+                        onClick={() => handleWhatsApp(info.telefoneMae, info.nomeMae)}
+                      >
+                        WhatsApp
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
-          )}
-        </div>
+          </div>
+        )}
 
         <footer>
-          <p>Tag NFC de Identificação</p>
+          <div className="brand-section">
+            <div className="brand-info">
+              <h3>3DIdeas</h3>
+              <p className="brand-tagline">Tags NFC Personalizadas</p>
+            </div>
+            <div className="brand-contact">
+              <button 
+                className="contact-btn" 
+                onClick={() => handleWhatsApp('14991647966', false)}
+              >
+                <span className="contact-label">WhatsApp</span>
+                <span className="contact-phone">(14) 99164-7966</span>
+              </button>
+              <button 
+                className="contact-btn" 
+                onClick={() => handleWhatsApp('14991297163', false)}
+              >
+                <span className="contact-label">WhatsApp</span>
+                <span className="contact-phone">(14) 99129-7163</span>
+              </button>
+            </div>
+          </div>
         </footer>
       </div>
     </div>
