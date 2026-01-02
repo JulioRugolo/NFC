@@ -12,6 +12,7 @@ function App() {
   }
   const [info, setInfo] = useState({
     nomeCrianca: '',
+    genero: 'menina', // 'menino' ou 'menina'
     nomePai: '',
     nomeMae: '',
     telefonePai: '',
@@ -41,6 +42,7 @@ function App() {
     
     setInfo({
       nomeCrianca: decodeParam(params.get('nomeCrianca') || params.get('nome_crianca') || ''),
+      genero: decodeParam(params.get('genero') || '') || 'menina',
       nomePai: decodeParam(params.get('nomePai') || params.get('nome_pai') || ''),
       nomeMae: decodeParam(params.get('nomeMae') || params.get('nome_mae') || ''),
       telefonePai: decodeParam(params.get('telefonePai') || params.get('telefone_pai') || ''),
@@ -165,7 +167,9 @@ function App() {
         <header>
           {info.nomeCrianca && (
             <>
-              <p className="header-subtitle">Você achou os pertences da</p>
+              <p className="header-subtitle">
+                Você achou os pertences {info.genero === 'menino' ? 'do' : 'da'}
+              </p>
               <h1 className="child-name">{info.nomeCrianca}</h1>
               <p className="header-instruction">Clique nos botões abaixo para entrar em contato com os responsáveis</p>
             </>

@@ -6,6 +6,7 @@ function ConfigPage() {
   const navigate = useNavigate()
   const [formData, setFormData] = useState({
     nomeCrianca: '',
+    genero: 'menina', // 'menino' ou 'menina'
     nomePai: '',
     nomeMae: '',
     telefonePai: '',
@@ -27,10 +28,10 @@ function ConfigPage() {
   }, [formData, baseUrl])
 
   const handleChange = (e) => {
-    const { name, value } = e.target
+    const { name, value, type, checked } = e.target
     setFormData(prev => ({
       ...prev,
-      [name]: value
+      [name]: type === 'checkbox' ? (checked ? 'menino' : 'menina') : value
     }))
   }
 
@@ -38,10 +39,11 @@ function ConfigPage() {
     const params = new URLSearchParams()
     
     Object.keys(formData).forEach(key => {
-      if (formData[key].trim() !== '') {
-        // URLSearchParams já faz encoding automático de caracteres especiais
-        // Mas garantimos que espaços e caracteres especiais sejam tratados corretamente
-        const value = formData[key].trim()
+      const value = formData[key]
+      // Trata checkbox (genero) e campos de texto
+      if (typeof value === 'string' && value.trim() !== '') {
+        params.append(key, value.trim())
+      } else if (typeof value !== 'string' && value) {
         params.append(key, value)
       }
     })
@@ -73,6 +75,7 @@ function ConfigPage() {
   const clearForm = () => {
     setFormData({
       nomeCrianca: '',
+      genero: 'menina',
       nomePai: '',
       nomeMae: '',
       telefonePai: '',
@@ -106,6 +109,19 @@ function ConfigPage() {
               onChange={handleChange}
               placeholder="Ex: Anna Julia Rugolo"
             />
+          </div>
+
+          <div className="form-group">
+            <label className="checkbox-label">
+              <input
+                type="checkbox"
+                name="genero"
+                checked={formData.genero === 'menino'}
+                onChange={handleChange}
+              />
+              <span className="checkbox-text">É menino</span>
+            </label>
+            <p className="form-help">Se não marcar, será considerado menina</p>
           </div>
 
           <div className="form-row">
