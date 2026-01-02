@@ -22,15 +22,29 @@ function App() {
   const [pendingAction, setPendingAction] = useState(null)
 
   useEffect(() => {
-    // Lê os parâmetros da URL
+    // Lê os parâmetros da URL e decodifica caracteres especiais
     const params = new URLSearchParams(window.location.search)
     
+    // Função auxiliar para decodificar valores
+    // URLSearchParams já decodifica automaticamente, mas tratamos casos especiais
+    const decodeParam = (value) => {
+      if (!value) return ''
+      try {
+        // URLSearchParams.get() já retorna decodificado, mas se houver encoding duplo, decodificamos novamente
+        const decoded = decodeURIComponent(value.replace(/\+/g, ' '))
+        return decoded
+      } catch (e) {
+        // Se falhar o decode, retorna o valor original
+        return value
+      }
+    }
+    
     setInfo({
-      nomeCrianca: params.get('nomeCrianca') || params.get('nome_crianca') || '',
-      nomePai: params.get('nomePai') || params.get('nome_pai') || '',
-      nomeMae: params.get('nomeMae') || params.get('nome_mae') || '',
-      telefonePai: params.get('telefonePai') || params.get('telefone_pai') || '',
-      telefoneMae: params.get('telefoneMae') || params.get('telefone_mae') || ''
+      nomeCrianca: decodeParam(params.get('nomeCrianca') || params.get('nome_crianca') || ''),
+      nomePai: decodeParam(params.get('nomePai') || params.get('nome_pai') || ''),
+      nomeMae: decodeParam(params.get('nomeMae') || params.get('nome_mae') || ''),
+      telefonePai: decodeParam(params.get('telefonePai') || params.get('telefone_pai') || ''),
+      telefoneMae: decodeParam(params.get('telefoneMae') || params.get('telefone_mae') || '')
     })
   }, [])
 

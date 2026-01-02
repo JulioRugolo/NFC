@@ -39,10 +39,14 @@ function ConfigPage() {
     
     Object.keys(formData).forEach(key => {
       if (formData[key].trim() !== '') {
-        params.append(key, formData[key].trim())
+        // URLSearchParams já faz encoding automático de caracteres especiais
+        // Mas garantimos que espaços e caracteres especiais sejam tratados corretamente
+        const value = formData[key].trim()
+        params.append(key, value)
       }
     })
 
+    // URLSearchParams.toString() já retorna a query string com encoding correto
     const queryString = params.toString()
     const url = queryString 
       ? `${baseUrl}/?${queryString}`
@@ -198,7 +202,10 @@ function ConfigPage() {
               </div>
             </div>
             <p className="url-hint">
-              💡 Use esta URL para configurar sua tag NFC
+              💡 Use esta URL para configurar sua tag NFC<br/>
+              <span style={{fontSize: '11px', opacity: 0.8}}>
+                Caracteres especiais (ã, ç, á, etc.) são suportados automaticamente
+              </span>
             </p>
           </div>
         )}
