@@ -1,7 +1,7 @@
 import CryptoJS from 'crypto-js'
 
 // Chave de criptografia - em produção, considere usar uma variável de ambiente
-const SECRET_KEY = '3DIdeas-NFC-Tag-Secret-Key-2024'
+const SECRET_KEY = 'BOTU3D-NFC-Tag-Secret-Key-2024'
 
 /**
  * Criptografa um objeto de dados

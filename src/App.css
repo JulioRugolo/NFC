@@ -48,31 +48,6 @@ header h1.child-name {
   letter-spacing: -0.3px;
 }
 
-.instagram-link-container {
-  margin: 8px 0 12px 0;
-  display: flex;
-  justify-content: center;
-}
-
-.btn-instagram {
-  padding: 8px 16px;
-  border: 1px solid #e1306c;
-  border-radius: 8px;
-  background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
-  color: white;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.btn-instagram:active {
-  transform: scale(0.98);
-  opacity: 0.9;
-}
 
 header .header-instruction {
   margin: 0;
@@ -191,6 +166,29 @@ header .header-instruction {
   background: #20ba5a;
   transform: scale(0.98);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+}
+
+.btn-instagram-small {
+  width: 100%;
+  margin-top: 10px;
+  padding: 10px 12px;
+  border: 1px solid #e1306c;
+  border-radius: 6px;
+  background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
+  color: white;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.btn-instagram-small:active {
+  transform: scale(0.98);
+  opacity: 0.9;
 }
 
 .empty-state {
@@ -457,6 +455,34 @@ footer {
 
 .modal-feature:last-child {
   margin-bottom: 0;
+}
+
+.modal-instagram {
+  margin: 20px 0;
+  display: flex;
+  justify-content: center;
+}
+
+.modal-btn-instagram {
+  width: 100%;
+  padding: 12px 16px;
+  border: 2px solid #e1306c;
+  border-radius: 8px;
+  background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
+  color: white;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.modal-btn-instagram:active {
+  transform: scale(0.98);
+  opacity: 0.9;
 }
 
 .modal-actions {

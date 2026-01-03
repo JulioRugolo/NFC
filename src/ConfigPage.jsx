@@ -7,9 +7,10 @@ function ConfigPage() {
   const [formData, setFormData] = useState({
     nomeCrianca: '',
     genero: 'menina', // 'menino' ou 'menina'
-    instagram: '',
     nomePai: '',
     nomeMae: '',
+    instagramPai: '',
+    instagramMae: '',
     telefonePai: '',
     telefoneMae: ''
   })
@@ -77,9 +78,10 @@ function ConfigPage() {
     setFormData({
       nomeCrianca: '',
       genero: 'menina',
-      instagram: '',
       nomePai: '',
       nomeMae: '',
+      instagramPai: '',
+      instagramMae: '',
       telefonePai: '',
       telefoneMae: ''
     })
@@ -126,22 +128,6 @@ function ConfigPage() {
             <p className="form-help">Se não marcar, será considerado menina</p>
           </div>
 
-          <div className="form-group">
-            <label htmlFor="instagram">
-              <span className="icon">📷</span>
-              Instagram (opcional)
-            </label>
-            <input
-              type="text"
-              id="instagram"
-              name="instagram"
-              value={formData.instagram}
-              onChange={handleChange}
-              placeholder="Ex: @juliorugolo ou juliorugolo"
-            />
-            <p className="form-help">Não precisa incluir o @</p>
-          </div>
-
           <div className="form-row">
             <div className="form-group">
               <label htmlFor="nomePai">
@@ -175,6 +161,22 @@ function ConfigPage() {
             </div>
           </div>
 
+          <div className="form-group">
+            <label htmlFor="instagramPai">
+              <span className="icon">📷</span>
+              Instagram do Pai (opcional)
+            </label>
+            <input
+              type="text"
+              id="instagramPai"
+              name="instagramPai"
+              value={formData.instagramPai}
+              onChange={handleChange}
+              placeholder="Ex: juliorugolo"
+            />
+            <p className="form-help">Não precisa incluir o @</p>
+          </div>
+
           <div className="form-row">
             <div className="form-group">
               <label htmlFor="nomeMae">
@@ -206,6 +208,22 @@ function ConfigPage() {
                 maxLength="15"
               />
             </div>
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="instagramMae">
+              <span className="icon">📷</span>
+              Instagram da Mãe (opcional)
+            </label>
+            <input
+              type="text"
+              id="instagramMae"
+              name="instagramMae"
+              value={formData.instagramMae}
+              onChange={handleChange}
+              placeholder="Ex: mirelarugolo"
+            />
+            <p className="form-help">Não precisa incluir o @</p>
           </div>
 
           <div className="form-actions">

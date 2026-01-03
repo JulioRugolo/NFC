@@ -13,9 +13,10 @@ function App() {
   const [info, setInfo] = useState({
     nomeCrianca: '',
     genero: 'menina', // 'menino' ou 'menina'
-    instagram: '',
     nomePai: '',
     nomeMae: '',
+    instagramPai: '',
+    instagramMae: '',
     telefonePai: '',
     telefoneMae: ''
   })
@@ -44,9 +45,10 @@ function App() {
     setInfo({
       nomeCrianca: decodeParam(params.get('nomeCrianca') || params.get('nome_crianca') || ''),
       genero: decodeParam(params.get('genero') || '') || 'menina',
-      instagram: decodeParam(params.get('instagram') || ''),
       nomePai: decodeParam(params.get('nomePai') || params.get('nome_pai') || ''),
       nomeMae: decodeParam(params.get('nomeMae') || params.get('nome_mae') || ''),
+      instagramPai: decodeParam(params.get('instagramPai') || params.get('instagram_pai') || ''),
+      instagramMae: decodeParam(params.get('instagramMae') || params.get('instagram_mae') || ''),
       telefonePai: decodeParam(params.get('telefonePai') || params.get('telefone_pai') || ''),
       telefoneMae: decodeParam(params.get('telefoneMae') || params.get('telefone_mae') || '')
     })
@@ -139,10 +141,10 @@ function App() {
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <button className="modal-close" onClick={handleSkip}>×</button>
             <div className="modal-body">
-              <div className="modal-logo">3DIdeas</div>
+              <div className="modal-logo">BOTU3D</div>
               <h3 className="modal-title">Tags NFC Personalizadas</h3>
               <p className="modal-text">
-                Esta tag foi feita pela <strong>3DIdeas</strong>!
+                Esta tag foi feita pela <strong>BOTU3D</strong>!
               </p>
               <p className="modal-text">
                 Procurando uma solução segura para identificar itens das crianças?
@@ -152,6 +154,14 @@ function App() {
                 <div className="modal-feature">✓ Personalização completa</div>
                 <div className="modal-feature">✓ Impressão 3D de qualidade</div>
                 <div className="modal-feature">✓ Fácil instalação</div>
+              </div>
+              <div className="modal-instagram">
+                <button 
+                  className="modal-btn-instagram"
+                  onClick={() => window.open('https://instagram.com/botu.3d', '_blank')}
+                >
+                  📷 Siga-nos no Instagram: @botu.3d
+                </button>
               </div>
               <div className="modal-actions">
                 <button className="modal-btn modal-btn-primary" onClick={handleContinue}>
@@ -173,19 +183,6 @@ function App() {
                 Você achou os pertences {info.genero === 'menino' ? 'do' : 'da'}
               </p>
               <h1 className="child-name">{info.nomeCrianca}</h1>
-              {info.instagram && info.instagram.trim() !== '' && (
-                <div className="instagram-link-container">
-                  <button 
-                    className="btn-instagram"
-                    onClick={() => {
-                      const username = info.instagram.trim().replace(/^@/, '')
-                      window.open(`https://instagram.com/${username}`, '_blank')
-                    }}
-                  >
-                    📷 @{info.instagram.trim().replace(/^@/, '')}
-                  </button>
-                </div>
-              )}
               <p className="header-instruction">Clique nos botões abaixo para entrar em contato com os responsáveis</p>
             </>
           )}
@@ -217,6 +214,17 @@ function App() {
                       </button>
                     </div>
                   )}
+                  {info.instagramPai && info.instagramPai.trim() !== '' && (
+                    <button 
+                      className="btn-instagram-small"
+                      onClick={() => {
+                        const username = info.instagramPai.trim().replace(/^@/, '')
+                        window.open(`https://instagram.com/${username}`, '_blank')
+                      }}
+                    >
+                      📷 @{info.instagramPai.trim().replace(/^@/, '')}
+                    </button>
+                  )}
                 </div>
               )}
 
@@ -242,6 +250,17 @@ function App() {
                       </button>
                     </div>
                   )}
+                  {info.instagramMae && info.instagramMae.trim() !== '' && (
+                    <button 
+                      className="btn-instagram-small"
+                      onClick={() => {
+                        const username = info.instagramMae.trim().replace(/^@/, '')
+                        window.open(`https://instagram.com/${username}`, '_blank')
+                      }}
+                    >
+                      📷 @{info.instagramMae.trim().replace(/^@/, '')}
+                    </button>
+                  )}
                 </div>
               )}
             </div>
@@ -251,7 +270,7 @@ function App() {
         <footer>
           <div className="brand-section">
             <div className="brand-info">
-              <h3>3DIdeas</h3>
+              <h3>BOTU3D</h3>
               <p className="brand-tagline">Tags NFC Personalizadas</p>
             </div>
             <div className="brand-contact">
