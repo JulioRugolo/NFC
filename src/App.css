@@ -48,6 +48,13 @@ header h1.child-name {
   letter-spacing: -0.3px;
 }
 
+.address-text {
+  margin: 0 0 12px 0;
+  color: #666;
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.5;
+}
 
 header .header-instruction {
   margin: 0;

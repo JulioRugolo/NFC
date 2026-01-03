@@ -13,6 +13,7 @@ function App() {
   const [info, setInfo] = useState({
     nomeCrianca: '',
     genero: 'menina', // 'menino' ou 'menina'
+    endereco: '',
     nomePai: '',
     nomeMae: '',
     instagramPai: '',
@@ -45,6 +46,7 @@ function App() {
     setInfo({
       nomeCrianca: decodeParam(params.get('nomeCrianca') || params.get('nome_crianca') || ''),
       genero: decodeParam(params.get('genero') || '') || 'menina',
+      endereco: decodeParam(params.get('endereco') || ''),
       nomePai: decodeParam(params.get('nomePai') || params.get('nome_pai') || ''),
       nomeMae: decodeParam(params.get('nomeMae') || params.get('nome_mae') || ''),
       instagramPai: decodeParam(params.get('instagramPai') || params.get('instagram_pai') || ''),
@@ -183,6 +185,9 @@ function App() {
                 Você achou os pertences {info.genero === 'menino' ? 'do' : 'da'}
               </p>
               <h1 className="child-name">{info.nomeCrianca}</h1>
+              {info.endereco && info.endereco.trim() !== '' && (
+                <p className="address-text">📍 {info.endereco}</p>
+              )}
               <p className="header-instruction">Clique nos botões abaixo para entrar em contato com os responsáveis</p>
             </>
           )}

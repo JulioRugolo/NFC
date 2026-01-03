@@ -7,6 +7,7 @@ function ConfigPage() {
   const [formData, setFormData] = useState({
     nomeCrianca: '',
     genero: 'menina', // 'menino' ou 'menina'
+    endereco: '',
     nomePai: '',
     nomeMae: '',
     instagramPai: '',
@@ -78,6 +79,7 @@ function ConfigPage() {
     setFormData({
       nomeCrianca: '',
       genero: 'menina',
+      endereco: '',
       nomePai: '',
       nomeMae: '',
       instagramPai: '',
@@ -126,6 +128,21 @@ function ConfigPage() {
               <span className="checkbox-text">É menino</span>
             </label>
             <p className="form-help">Se não marcar, será considerado menina</p>
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="endereco">
+              <span className="icon">📍</span>
+              Endereço (opcional)
+            </label>
+            <input
+              type="text"
+              id="endereco"
+              name="endereco"
+              value={formData.endereco}
+              onChange={handleChange}
+              placeholder="Ex: Rua Exemplo, 123 - Bairro - Cidade/SP"
+            />
           </div>
 
           <div className="form-row">
