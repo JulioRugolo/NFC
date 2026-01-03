@@ -46,6 +46,14 @@ header h1.child-name {
   font-size: 22px;
   font-weight: 600;
   letter-spacing: -0.3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.pet-type-badge {
+  font-size: 20px;
 }
 
 .address-text {

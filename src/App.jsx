@@ -11,7 +11,9 @@ function App() {
     return <ConfigPage />
   }
   const [info, setInfo] = useState({
+    tipo: 'crianca', // 'crianca' ou 'pet'
     nomeCrianca: '',
+    tipoPet: '', // 'gato' ou 'cachorro'
     genero: 'menina', // 'menino' ou 'menina'
     endereco: '',
     nomePai: '',
@@ -44,7 +46,9 @@ function App() {
     }
     
     setInfo({
+      tipo: decodeParam(params.get('tipo') || '') || 'crianca',
       nomeCrianca: decodeParam(params.get('nomeCrianca') || params.get('nome_crianca') || ''),
+      tipoPet: decodeParam(params.get('tipoPet') || ''),
       genero: decodeParam(params.get('genero') || '') || 'menina',
       endereco: decodeParam(params.get('endereco') || ''),
       nomePai: decodeParam(params.get('nomePai') || params.get('nome_pai') || ''),
@@ -59,13 +63,34 @@ function App() {
   const formatPhone = (phone) => {
     if (!phone) return ''
     // Remove caracteres não numéricos
-    const cleaned = phone.replace(/\D/g, '')
-    // Formata como (XX) XXXXX-XXXX ou (XX) XXXX-XXXX
-    if (cleaned.length === 11) {
+    let cleaned = phone.replace(/\D/g, '')
+    
+    // Se já começa com 0, mantém como está
+    if (cleaned.startsWith('0')) {
+      // Limita a 12 dígitos
+      if (cleaned.length > 12) {
+        cleaned = cleaned.substring(0, 12)
+      }
+    } else {
+      // Se não começa com 0 e tem 10 ou 11 dígitos, adiciona o 0
+      if (cleaned.length === 10 || cleaned.length === 11) {
+        cleaned = '0' + cleaned
+      }
+    }
+    
+    // Formata como (0XX) XXXXX-XXXX (12 dígitos total)
+    if (cleaned.length === 12) {
+      // Formato completo: (0XX) XXXXX-XXXX
+      return `(${cleaned.substring(0, 3)}) ${cleaned.substring(3, 8)}-${cleaned.substring(8)}`
+    } else if (cleaned.length === 11) {
+      // Formato antigo sem 0: (XX) XXXXX-XXXX
       return `(${cleaned.substring(0, 2)}) ${cleaned.substring(2, 7)}-${cleaned.substring(7)}`
     } else if (cleaned.length === 10) {
+      // Formato fixo: (XX) XXXX-XXXX
       return `(${cleaned.substring(0, 2)}) ${cleaned.substring(2, 6)}-${cleaned.substring(6)}`
     }
+    
+    // Se não conseguir formatar, retorna como está
     return phone
   }
 
@@ -86,7 +111,8 @@ function App() {
   const handleWhatsApp = (phone, responsibleName, showPromo = true) => {
     if (phone) {
       const cleaned = phone.replace(/\D/g, '')
-      const message = `Olá ${responsibleName}, tudo bem? Achei os pertences da ${info.nomeCrianca || 'criança'}`
+      const nome = info.nomeCrianca || (info.tipo === 'pet' ? 'pet' : 'criança')
+      const message = `Olá ${responsibleName}, tudo bem? Achei os pertences ${info.tipo === 'pet' ? 'do' : 'da'} ${nome}`
       const encodedMessage = encodeURIComponent(message)
       const whatsappUrl = `https://wa.me/55${cleaned}?text=${encodedMessage}`
       
@@ -184,7 +210,12 @@ function App() {
               <p className="header-subtitle">
                 Você achou os pertences {info.genero === 'menino' ? 'do' : 'da'}
               </p>
-              <h1 className="child-name">{info.nomeCrianca}</h1>
+              <h1 className="child-name">
+                {info.nomeCrianca}
+                {info.tipo === 'pet' && info.tipoPet && (
+                  <span className="pet-type-badge"> {info.tipoPet === 'cachorro' ? '🐶' : '🐱'}</span>
+                )}
+              </h1>
               {info.endereco && info.endereco.trim() !== '' && (
                 <p className="address-text">📍 {info.endereco}</p>
               )}
@@ -200,7 +231,7 @@ function App() {
               {info.nomePai && (
                 <div className="responsible-item responsible-item-pai">
                   <div className="responsible-header">
-                    <span className="responsible-label">Pai:</span>
+                    <span className="responsible-label">{info.tipo === 'pet' ? 'Tutor:' : 'Pai:'}</span>
                     <span className="responsible-name">{info.nomePai}</span>
                   </div>
                   {info.telefonePai && (
@@ -236,7 +267,7 @@ function App() {
               {info.nomeMae && (
                 <div className="responsible-item responsible-item-mae">
                   <div className="responsible-header">
-                    <span className="responsible-label">Mãe:</span>
+                    <span className="responsible-label">{info.tipo === 'pet' ? 'Tutora:' : 'Mãe:'}</span>
                     <span className="responsible-name">{info.nomeMae}</span>
                   </div>
                   {info.telefoneMae && (
