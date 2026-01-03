@@ -7,6 +7,7 @@ function ConfigPage() {
   const [formData, setFormData] = useState({
     nomeCrianca: '',
     genero: 'menina', // 'menino' ou 'menina'
+    instagram: '',
     nomePai: '',
     nomeMae: '',
     telefonePai: '',
@@ -76,6 +77,7 @@ function ConfigPage() {
     setFormData({
       nomeCrianca: '',
       genero: 'menina',
+      instagram: '',
       nomePai: '',
       nomeMae: '',
       telefonePai: '',
@@ -122,6 +124,22 @@ function ConfigPage() {
               <span className="checkbox-text">É menino</span>
             </label>
             <p className="form-help">Se não marcar, será considerado menina</p>
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="instagram">
+              <span className="icon">📷</span>
+              Instagram (opcional)
+            </label>
+            <input
+              type="text"
+              id="instagram"
+              name="instagram"
+              value={formData.instagram}
+              onChange={handleChange}
+              placeholder="Ex: @juliorugolo ou juliorugolo"
+            />
+            <p className="form-help">Não precisa incluir o @</p>
           </div>
 
           <div className="form-row">

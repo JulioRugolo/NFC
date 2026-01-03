@@ -13,6 +13,7 @@ function App() {
   const [info, setInfo] = useState({
     nomeCrianca: '',
     genero: 'menina', // 'menino' ou 'menina'
+    instagram: '',
     nomePai: '',
     nomeMae: '',
     telefonePai: '',
@@ -43,6 +44,7 @@ function App() {
     setInfo({
       nomeCrianca: decodeParam(params.get('nomeCrianca') || params.get('nome_crianca') || ''),
       genero: decodeParam(params.get('genero') || '') || 'menina',
+      instagram: decodeParam(params.get('instagram') || ''),
       nomePai: decodeParam(params.get('nomePai') || params.get('nome_pai') || ''),
       nomeMae: decodeParam(params.get('nomeMae') || params.get('nome_mae') || ''),
       telefonePai: decodeParam(params.get('telefonePai') || params.get('telefone_pai') || ''),
@@ -171,6 +173,19 @@ function App() {
                 Você achou os pertences {info.genero === 'menino' ? 'do' : 'da'}
               </p>
               <h1 className="child-name">{info.nomeCrianca}</h1>
+              {info.instagram && info.instagram.trim() !== '' && (
+                <div className="instagram-link-container">
+                  <button 
+                    className="btn-instagram"
+                    onClick={() => {
+                      const username = info.instagram.trim().replace(/^@/, '')
+                      window.open(`https://instagram.com/${username}`, '_blank')
+                    }}
+                  >
+                    📷 @{info.instagram.trim().replace(/^@/, '')}
+                  </button>
+                </div>
+              )}
               <p className="header-instruction">Clique nos botões abaixo para entrar em contato com os responsáveis</p>
             </>
           )}

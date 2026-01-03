@@ -48,6 +48,32 @@ header h1.child-name {
   letter-spacing: -0.3px;
 }
 
+.instagram-link-container {
+  margin: 8px 0 12px 0;
+  display: flex;
+  justify-content: center;
+}
+
+.btn-instagram {
+  padding: 8px 16px;
+  border: 1px solid #e1306c;
+  border-radius: 8px;
+  background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
+  color: white;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-instagram:active {
+  transform: scale(0.98);
+  opacity: 0.9;
+}
+
 header .header-instruction {
   margin: 0;
   color: #495057;
