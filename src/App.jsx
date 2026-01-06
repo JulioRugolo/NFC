@@ -112,7 +112,8 @@ function App() {
     if (phone) {
       const cleaned = phone.replace(/\D/g, '')
       const nome = info.nomeCrianca || (info.tipo === 'pet' ? 'pet' : 'criança')
-      const message = `Olá ${responsibleName}, tudo bem? Achei os pertences ${info.tipo === 'pet' ? 'do' : 'da'} ${nome}`
+      const pronome = info.genero === 'menino' ? 'do' : 'da'
+      const message = `Olá ${responsibleName}, tudo bem? Achei os pertences ${pronome} ${nome}`
       const encodedMessage = encodeURIComponent(message)
       const whatsappUrl = `https://wa.me/55${cleaned}?text=${encodedMessage}`
       
