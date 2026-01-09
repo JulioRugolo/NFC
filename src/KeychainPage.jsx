@@ -26,7 +26,7 @@ function KeychainPage() {
     boxXOffset: 0,
     boxYOffset: -30,
     font: 'Chewy',
-    fontStyle: 'Black Italic',
+    fontStyle: 'Black',
     baseColor: '#4a90e2', // Azul padrão
     textColor: '#ffffff'   // Branco padrão
   })
