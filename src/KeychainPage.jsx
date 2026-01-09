@@ -4,6 +4,7 @@ import './ConfigPage.css'
 import * as THREE from 'three'
 import JSZip from 'jszip'
 import Keychain3DViewer from './Keychain3DViewer'
+import ProgressModal from './ProgressModal'
 
 function KeychainPage() {
   const navigate = useNavigate()
@@ -35,6 +36,9 @@ function KeychainPage() {
   const [isGeneratingPreview, setIsGeneratingPreview] = useState(false)
   const [stlData, setStlData] = useState(null)
   const [isGenerating3D, setIsGenerating3D] = useState(false)
+  const [progress, setProgress] = useState(0)
+  const [progressMessage, setProgressMessage] = useState('')
+  const [showProgressModal, setShowProgressModal] = useState(false)
 
   const fonts = [
     'Inter', 'Rubik', 'Open Sans', 'Inter Tight', 'Source Sans 3', 'Noto Emoji',
@@ -283,10 +287,26 @@ keychain(name, line2, fontSize, thickness, textThickness, keychainHoleSize, keyc
 
       setIsGenerating3D(true)
       setStlData(null)
+      setProgress(0)
+      setProgressMessage('Iniciando geração do modelo...')
+      setShowProgressModal(true)
 
       const API_URL = import.meta.env.VITE_API_URL || 
         (import.meta.env.PROD ? window.location.origin : 'http://localhost:3001')
       
+      // Simula progresso enquanto aguarda resposta
+      const progressInterval = setInterval(() => {
+        setProgress(prev => {
+          if (prev < 90) {
+            return prev + 2
+          }
+          return prev
+        })
+      }, 500)
+
+      setProgress(10)
+      setProgressMessage('Preparando modelo...')
+
       const response = await fetch(`${API_URL}/api/generate-3d-model`, {
         method: 'POST',
         headers: {
@@ -295,7 +315,11 @@ keychain(name, line2, fontSize, thickness, textThickness, keychainHoleSize, keyc
         body: JSON.stringify(keychainConfig)
       })
 
+      setProgress(40)
+      setProgressMessage('Gerando base do chaveiro...')
+
       if (!response.ok) {
+        clearInterval(progressInterval)
         let errorMessage = 'Erro ao gerar modelo 3D'
         
         try {
@@ -309,19 +333,38 @@ keychain(name, line2, fontSize, thickness, textThickness, keychainHoleSize, keyc
         throw new Error(errorMessage)
       }
 
+      setProgress(70)
+      setProgressMessage('Gerando texto do chaveiro...')
+
       const data = await response.json()
       
+      setProgress(90)
+      setProgressMessage('Processando modelos...')
+
       if (data.success && data.baseStl && data.textStl) {
         // Decodifica os STLs de base64 para string
         const baseStlString = atob(data.baseStl)
         const textStlString = atob(data.textStl)
         setStlData({ base: baseStlString, text: textStlString })
+        
+        setProgress(100)
+        setProgressMessage('Modelo gerado com sucesso!')
+        
+        // Fecha o modal após 1 segundo
+        setTimeout(() => {
+          setShowProgressModal(false)
+          setProgress(0)
+          setProgressMessage('')
+        }, 1000)
       } else {
         throw new Error('Resposta inválida do servidor')
       }
 
+      clearInterval(progressInterval)
+
     } catch (error) {
       console.error('Erro ao gerar modelo 3D:', error)
+      setShowProgressModal(false)
       alert(`Erro ao gerar modelo 3D: ${error.message}\n\nCertifique-se de que o servidor backend está rodando.`)
     } finally {
       setIsGenerating3D(false)
@@ -709,6 +752,16 @@ ${trianglesXML}        </triangles>
 
   return (
     <div className="config-page">
+      <ProgressModal
+        isOpen={showProgressModal}
+        progress={progress}
+        message={progressMessage}
+        onClose={() => {
+          if (progress >= 100) {
+            setShowProgressModal(false)
+          }
+        }}
+      />
       <div className="config-container">
         <header className="config-header">
           <h1>🔑 Personalizador de Chaveiro 3D</h1>

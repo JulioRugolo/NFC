@@ -176,7 +176,7 @@ function generateBaseOnlySCAD(config) {
   const baseRgb = hexToRgb(config.baseColor || '#4a90e2')
   
   return `// Parameters - Base Only
-$fn = 100;
+$fn = 50; // Reduzido para melhor performance na visualização
 name = "${name.replace(/"/g, '\\"')}";
 line2 = "${line2.replace(/"/g, '\\"')}";
 2ndline = ${show2ndLine};
@@ -237,7 +237,7 @@ function generateTextOnlySCAD(config) {
           line2Offset, line2VerticalOffset, font, fontStyle } = config
 
   return `// Parameters - Text Only
-$fn = 100;
+$fn = 50; // Reduzido para melhor performance na visualização
 name = "${name.replace(/"/g, '\\"')}";
 line2 = "${line2.replace(/"/g, '\\"')}";
 2ndline = ${show2ndLine};
