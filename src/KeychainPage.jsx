@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import './ConfigPage.css'
+import './KeychainPage.css'
 import * as THREE from 'three'
 import JSZip from 'jszip'
 import Keychain3DViewer from './Keychain3DViewer'
@@ -784,7 +785,7 @@ ${trianglesXML}        </triangles>
   }
 
   return (
-    <div className="config-page">
+    <div className="keychain-page">
       <ProgressModal
         isOpen={showProgressModal}
         progress={progress}
@@ -795,8 +796,8 @@ ${trianglesXML}        </triangles>
           }
         }}
       />
-      <div className="config-container">
-        <header className="config-header">
+      <div className="keychain-container">
+        <header className="keychain-header">
           <h1>🔑 Personalizador de Chaveiro 3D</h1>
           <p>Configure os parâmetros do seu chaveiro personalizado e gere o arquivo para impressão 3D</p>
         </header>
@@ -860,7 +861,7 @@ ${trianglesXML}        </triangles>
           )}
         </div>
 
-        <form className="config-form" onSubmit={(e) => e.preventDefault()}>
+        <form className="keychain-form" onSubmit={(e) => e.preventDefault()}>
           <div className="form-group">
             <label htmlFor="name">
               <span className="icon">✏️</span>
