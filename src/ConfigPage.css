@@ -13,6 +13,14 @@
   background: white;
   min-height: 100vh;
   padding: 24px 20px;
+  box-sizing: border-box;
+}
+
+/* Mobile First - Config e Keychain */
+@media (max-width: 767px) {
+  .config-container {
+    padding: 20px 16px;
+  }
 }
 
 .config-header {
