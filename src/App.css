@@ -218,13 +218,18 @@ header .header-instruction {
 }
 
 .btn-phone-icon {
-  background: #495057;
+  background: #0d6efd;
   color: white;
 }
 
 .btn-phone-icon:active {
-  background: #343a40;
+  background: #0a58ca;
   transform: scale(0.95);
+}
+
+.btn-phone-icon svg {
+  width: 20px;
+  height: 20px;
 }
 
 .btn-whatsapp-icon {
