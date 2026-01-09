@@ -180,19 +180,6 @@ keychain(name, line2, fontSize, thickness, textThickness, keychainHoleSize, keyc
 `
   }
 
-  const downloadSCAD = () => {
-    const code = generateOpenSCAD()
-    const blob = new Blob([code], { type: 'text/plain' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `keychain_${keychainConfig.name || 'personalizado'}.scad`
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
-    URL.revokeObjectURL(url)
-  }
-
   const copyToClipboard = () => {
     const code = generateOpenSCAD()
     navigator.clipboard.writeText(code).then(() => {
@@ -1270,10 +1257,7 @@ ${trianglesXML}        </triangles>
 
           <div className="form-actions">
             <button type="button" className="btn btn-primary" onClick={generate3MF}>
-              📦 Gerar .scad, Abrir no OpenSCAD e Exportar .3mf
-            </button>
-            <button type="button" className="btn btn-primary" onClick={downloadSCAD}>
-              💾 Baixar Arquivo .scad
+              📦 Gerar e Baixar Arquivo .3mf
             </button>
             <button type="button" className="btn btn-copy" onClick={copyToClipboard}>
               📋 Copiar Código
@@ -1284,13 +1268,10 @@ ${trianglesXML}        </triangles>
             <ol style={{marginTop: '0.5rem', paddingLeft: '1.5rem', marginBottom: '0.5rem'}}>
               <li>Preencha pelo menos o <strong>Nome Principal</strong> (obrigatório)</li>
               <li>Ajuste os outros campos conforme sua preferência (valores padrão já estão configurados)</li>
-              <li>Clique em <strong>"Gerar .scad, Abrir no OpenSCAD e Exportar .3mf"</strong></li>
+              <li>Clique em <strong>"Gerar e Baixar Arquivo .3mf"</strong></li>
               <li>O sistema gerará o arquivo .3mf automaticamente e fará o download</li>
               <li>Abra o arquivo .3mf no Bambu Studio ou outro software de impressão 3D</li>
             </ol>
-            <p style={{marginTop: '0.5rem', marginBottom: 0}}>
-              <strong>💾 Alternativa:</strong> Você também pode baixar o arquivo .scad e abrir no OpenSCAD para visualizar e ajustar antes de exportar.
-            </p>
           </div>
         </form>
 
