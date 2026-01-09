@@ -76,7 +76,7 @@ header .header-instruction {
   margin: 0;
   padding: 16px;
   flex: 1;
-  overflow-y: auto;
+  overflow-y: visible;
   min-height: 0;
   background: #f8f9fa;
 }
@@ -244,6 +244,7 @@ footer {
   padding: 20px 16px;
   background: #1a1a1a;
   margin: 0;
+  margin-top: auto;
   flex-shrink: 0;
   border-top: 3px solid #25d366;
 }
