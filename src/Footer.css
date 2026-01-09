@@ -177,7 +177,8 @@
 /* Tablet */
 @media (min-width: 768px) and (max-width: 1023px) {
   .app-footer {
-    padding: 2.5rem 2rem;
+    padding: 0.8rem 1.5rem;
+    max-height: 30vh;
   }
 
   .footer-content {
@@ -185,10 +186,75 @@
     justify-content: space-between;
     align-items: center;
     text-align: left;
+    gap: 1rem;
   }
 
   .footer-brand {
     align-items: flex-start;
+    gap: 0.25rem;
+  }
+
+  .footer-logo {
+    font-size: 0.9rem;
+  }
+
+  .footer-tagline {
+    font-size: 0.65rem;
+  }
+
+  .footer-contact {
+    flex-direction: row;
+    max-width: none;
+    width: auto;
+    gap: 0.8rem;
+  }
+
+  .footer-btn {
+    min-width: 160px;
+    width: auto;
+    padding: 0.5rem 0.8rem;
+  }
+
+  .footer-btn-icon {
+    font-size: 1rem;
+  }
+
+  .footer-btn-label {
+    font-size: 0.65rem;
+  }
+
+  .footer-btn-phone,
+  .footer-btn-handle {
+    font-size: 0.75rem;
+  }
+}
+
+/* Desktop */
+@media (min-width: 1024px) {
+  .app-footer {
+    padding: 1rem 2rem;
+    max-height: 30vh;
+  }
+
+  .footer-content {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    text-align: left;
+    gap: 1.5rem;
+  }
+
+  .footer-brand {
+    align-items: flex-start;
+    gap: 0.3rem;
+  }
+
+  .footer-logo {
+    font-size: 1.1rem;
+  }
+
+  .footer-tagline {
+    font-size: 0.7rem;
   }
 
   .footer-contact {
@@ -199,59 +265,21 @@
   }
 
   .footer-btn {
-    min-width: 200px;
+    min-width: 180px;
     width: auto;
-  }
-}
-
-/* Desktop */
-@media (min-width: 1024px) {
-  .app-footer {
-    padding: 3rem 2rem;
-  }
-
-  .footer-content {
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
-    text-align: left;
-  }
-
-  .footer-brand {
-    align-items: flex-start;
-  }
-
-  .footer-logo {
-    font-size: 1.8rem;
-  }
-
-  .footer-tagline {
-    font-size: 1rem;
-  }
-
-  .footer-contact {
-    flex-direction: row;
-    max-width: none;
-    width: auto;
-    gap: 1.5rem;
-  }
-
-  .footer-btn {
-    min-width: 220px;
-    width: auto;
-    padding: 1.2rem 2rem;
+    padding: 0.6rem 1rem;
   }
 
   .footer-btn-icon {
-    font-size: 1.8rem;
+    font-size: 1.2rem;
   }
 
   .footer-btn-label {
-    font-size: 0.9rem;
+    font-size: 0.75rem;
   }
 
   .footer-btn-phone,
   .footer-btn-handle {
-    font-size: 1.1rem;
+    font-size: 0.85rem;
   }
 }
