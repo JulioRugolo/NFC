@@ -513,58 +513,92 @@ app.post('/api/generate-and-export-3mf', async (req, res) => {
     const { openscadPath } = await findOpenSCAD()
 
     // 3. Executa OpenSCAD via linha de comando para renderizar e exportar 3MF
-    // Nota: Não tentamos abrir GUI no servidor (Railway/Docker não tem display)
-    const openscadCommand = `"${openscadPath}" -o "${output3mfFile}" "${scadFile}"`
-    console.log(`🔧 Executando: ${openscadCommand}`)
+    // Nota: No Railway (Linux), usa Xvfb para renderização sem display
+    const isLinux = process.platform === 'linux'
+    
+    // Tenta gerar 3MF primeiro
+    let fileContent = null
+    let contentType = 'application/3mf'
+    let fileExtension = '3mf'
+    let outputFile = output3mfFile
     
     try {
-      const { stdout, stderr } = await execAsync(openscadCommand, { timeout: 60000 })
+      const openscadCommand = isLinux
+        ? `xvfb-run -a -s "-screen 0 1024x768x24" "${openscadPath}" -o "${output3mfFile}" "${scadFile}"`
+        : `"${openscadPath}" -o "${output3mfFile}" "${scadFile}"`
       
-      if (stderr && !stderr.includes('WARNING')) {
+      console.log(`🔧 Executando: ${openscadCommand}`)
+      
+      const { stdout, stderr } = await execAsync(openscadCommand, { timeout: 120000 })
+      
+      if (stderr && !stderr.includes('WARNING') && !stderr.includes('INFO')) {
         console.warn('OpenSCAD stderr:', stderr)
       }
       
       // Verifica se o arquivo foi criado
-      const fileContent = await readFile(output3mfFile)
-      
-      if (fileContent.length === 0) {
-        throw new Error('Arquivo 3MF gerado está vazio')
+      try {
+        fileContent = await readFile(output3mfFile)
+        
+        if (fileContent.length === 0) {
+          throw new Error('Arquivo 3MF gerado está vazio')
+        }
+        
+        console.log(`✅ Arquivo 3MF gerado com sucesso (${fileContent.length} bytes)`)
+      } catch (readErr) {
+        console.log('⚠️ Arquivo 3MF não encontrado ou vazio, tentando STL...')
+        throw new Error('3MF não disponível')
       }
-      
-      // Limpa arquivo temporário
-      await unlink(scadFile).catch(() => {})
-      
-      // Retorna o arquivo 3MF
-      res.setHeader('Content-Type', 'application/3mf')
-      res.setHeader('Content-Disposition', `attachment; filename="keychain_${config.name.replace(/\s+/g, '_')}.3mf"`)
-      res.send(fileContent)
-      
-      // Limpa o arquivo 3MF após enviar
-      setTimeout(() => {
-        unlink(output3mfFile).catch(() => {})
-      }, 5000)
       
     } catch (exportErr) {
       // Se 3MF falhar, tenta STL
-      console.log('3MF não suportado, tentando STL...')
+      console.log('📦 3MF não suportado ou falhou, tentando STL...')
       const stlFile = join(tempDir, `keychain_${tempId}.stl`)
-      const stlCommand = `"${openscadPath}" -o "${stlFile}" "${scadFile}"`
+      const stlCommand = isLinux
+        ? `xvfb-run -a -s "-screen 0 1024x768x24" "${openscadPath}" -o "${stlFile}" "${scadFile}"`
+        : `"${openscadPath}" -o "${stlFile}" "${scadFile}"`
       
       try {
-        const { stdout, stderr } = await execAsync(stlCommand, { timeout: 60000 })
-        const stlContent = await readFile(stlFile)
+        console.log(`🔧 Executando STL: ${stlCommand}`)
+        const { stdout, stderr } = await execAsync(stlCommand, { timeout: 120000 })
         
-        await unlink(scadFile).catch(() => {})
-        await unlink(stlFile).catch(() => {})
+        if (stderr && !stderr.includes('WARNING') && !stderr.includes('INFO')) {
+          console.warn('OpenSCAD stderr (STL):', stderr)
+        }
         
-        res.setHeader('Content-Type', 'application/sla')
-        res.setHeader('Content-Disposition', `attachment; filename="keychain_${config.name.replace(/\s+/g, '_')}.stl"`)
-        res.send(stlContent)
+        fileContent = await readFile(stlFile)
+        
+        if (fileContent.length === 0) {
+          throw new Error('Arquivo STL gerado está vazio')
+        }
+        
+        contentType = 'application/sla'
+        fileExtension = 'stl'
+        outputFile = stlFile
+        
+        console.log(`✅ Arquivo STL gerado com sucesso (${fileContent.length} bytes)`)
+        
+        // Limpa arquivo 3MF se existir
+        await unlink(output3mfFile).catch(() => {})
+        
       } catch (stlErr) {
+        console.error('❌ Erro ao gerar STL:', stlErr)
         const errorDetails = stlErr.stderr || stlErr.message || 'Erro desconhecido'
         throw new Error(`OpenSCAD execution failed: ${errorDetails}`)
       }
     }
+    
+    // Limpa arquivo temporário SCAD
+    await unlink(scadFile).catch(() => {})
+    
+    // Retorna o arquivo
+    res.setHeader('Content-Type', contentType)
+    res.setHeader('Content-Disposition', `attachment; filename="keychain_${config.name.replace(/\s+/g, '_')}.${fileExtension}"`)
+    res.send(fileContent)
+    
+    // Limpa o arquivo após enviar
+    setTimeout(() => {
+      unlink(outputFile).catch(() => {})
+    }, 5000)
 
   } catch (error) {
     console.error('Erro ao gerar e exportar 3MF:', error)
