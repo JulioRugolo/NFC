@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import './ConfigPage.css'
 import * as THREE from 'three'
 import JSZip from 'jszip'
+import KeychainViewer from './KeychainViewer'
 
 function KeychainPage() {
   const navigate = useNavigate()
@@ -585,8 +586,16 @@ ${trianglesXML}        </triangles>
           <p>Configure os parâmetros do seu chaveiro personalizado e gere o arquivo para impressão 3D</p>
         </header>
 
-        {/* Visualização 3D - Temporariamente desabilitada devido a incompatibilidade de versões */}
-        {/* Use o arquivo .scad no OpenSCAD para visualizar o modelo 3D */}
+        {/* Visualização 3D */}
+        {keychainConfig.name && (
+          <div style={{ marginBottom: '2rem' }}>
+            <h2 style={{ marginBottom: '1rem', fontSize: '1.3rem' }}>👁️ Visualização 3D do Chaveiro</h2>
+            <KeychainViewer config={keychainConfig} />
+            <p style={{ marginTop: '0.5rem', fontSize: '0.9em', color: '#666', textAlign: 'center' }}>
+              Esta é uma visualização aproximada. O modelo final pode ter pequenas diferenças.
+            </p>
+          </div>
+        )}
 
         <form className="config-form" onSubmit={(e) => e.preventDefault()}>
           <div className="form-group">
