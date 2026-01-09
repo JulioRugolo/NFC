@@ -521,9 +521,18 @@ footer {
     word-break: break-word;
   }
 
+  .contact-section {
+    gap: 6px;
+  }
+
   .contact-buttons {
     gap: 10px;
     width: 100%;
+  }
+
+  .phone-number {
+    font-size: 12px;
+    padding: 5px 6px;
   }
 
   .btn-icon {
@@ -533,6 +542,11 @@ footer {
     height: 40px;
     padding: 8px;
     font-size: 18px;
+  }
+
+  .btn-phone-icon svg {
+    width: 18px;
+    height: 18px;
   }
 
   .btn-whatsapp-icon svg {
