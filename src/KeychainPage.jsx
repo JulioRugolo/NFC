@@ -294,17 +294,19 @@ keychain(name, line2, fontSize, thickness, textThickness, keychainHoleSize, keyc
       const API_URL = import.meta.env.VITE_API_URL || 
         (import.meta.env.PROD ? window.location.origin : 'http://localhost:3001')
       
-      // Simula progresso enquanto aguarda resposta
+      // Simula progresso enquanto aguarda resposta (mais rápido)
       const progressInterval = setInterval(() => {
         setProgress(prev => {
-          if (prev < 90) {
-            return prev + 2
+          if (prev < 85) {
+            return prev + 3
+          } else if (prev < 95) {
+            return prev + 1
           }
           return prev
         })
-      }, 500)
+      }, 300)
 
-      setProgress(10)
+      setProgress(15)
       setProgressMessage('Preparando modelo...')
 
       const response = await fetch(`${API_URL}/api/generate-3d-model`, {
@@ -315,7 +317,7 @@ keychain(name, line2, fontSize, thickness, textThickness, keychainHoleSize, keyc
         body: JSON.stringify(keychainConfig)
       })
 
-      setProgress(40)
+      setProgress(50)
       setProgressMessage('Gerando base do chaveiro...')
 
       if (!response.ok) {
@@ -333,7 +335,7 @@ keychain(name, line2, fontSize, thickness, textThickness, keychainHoleSize, keyc
         throw new Error(errorMessage)
       }
 
-      setProgress(70)
+      setProgress(75)
       setProgressMessage('Gerando texto do chaveiro...')
 
       const data = await response.json()
@@ -347,20 +349,20 @@ keychain(name, line2, fontSize, thickness, textThickness, keychainHoleSize, keyc
         const textStlString = atob(data.textStl)
         setStlData({ base: baseStlString, text: textStlString })
         
+        clearInterval(progressInterval)
         setProgress(100)
         setProgressMessage('Modelo gerado com sucesso!')
         
-        // Fecha o modal após 1 segundo
+        // Fecha o modal após 0.5 segundo
         setTimeout(() => {
           setShowProgressModal(false)
           setProgress(0)
           setProgressMessage('')
-        }, 1000)
+        }, 500)
       } else {
+        clearInterval(progressInterval)
         throw new Error('Resposta inválida do servidor')
       }
-
-      clearInterval(progressInterval)
 
     } catch (error) {
       console.error('Erro ao gerar modelo 3D:', error)
@@ -439,17 +441,19 @@ keychain(name, line2, fontSize, thickness, textThickness, keychainHoleSize, keyc
       const API_URL = import.meta.env.VITE_API_URL || 
         (import.meta.env.PROD ? window.location.origin : 'http://localhost:3001')
       
-      // Simula progresso enquanto aguarda resposta
+      // Simula progresso enquanto aguarda resposta (mais rápido)
       const progressInterval = setInterval(() => {
         setProgress(prev => {
-          if (prev < 90) {
-            return prev + 2
+          if (prev < 85) {
+            return prev + 3
+          } else if (prev < 95) {
+            return prev + 1
           }
           return prev
         })
-      }, 500)
+      }, 300)
 
-      setProgress(10)
+      setProgress(15)
       setProgressMessage('Gerando código OpenSCAD...')
 
       const response = await fetch(`${API_URL}/api/generate-and-export-3mf`, {
@@ -460,7 +464,7 @@ keychain(name, line2, fontSize, thickness, textThickness, keychainHoleSize, keyc
         body: JSON.stringify(keychainConfig)
       })
 
-      setProgress(40)
+      setProgress(50)
       setProgressMessage('Renderizando modelo 3D...')
 
       // Verifica o tipo de conteúdo da resposta
@@ -486,13 +490,13 @@ keychain(name, line2, fontSize, thickness, textThickness, keychainHoleSize, keyc
         throw new Error(errorMessage + (errorHint ? `\n\n${errorHint}` : ''))
       }
 
-      setProgress(70)
+      setProgress(75)
       setProgressMessage('Exportando para formato 3MF...')
 
       // Se chegou aqui, a resposta está OK - baixa o arquivo
       const blob = await response.blob()
       
-      setProgress(90)
+      setProgress(95)
       setProgressMessage('Preparando download...')
 
       const url = URL.createObjectURL(blob)
@@ -508,12 +512,12 @@ keychain(name, line2, fontSize, thickness, textThickness, keychainHoleSize, keyc
       setProgress(100)
       setProgressMessage('Arquivo 3MF gerado com sucesso!')
       
-      // Fecha o modal após 1 segundo
+      // Fecha o modal após 0.5 segundo
       setTimeout(() => {
         setShowProgressModal(false)
         setProgress(0)
         setProgressMessage('')
-      }, 1000)
+      }, 500)
       
     } catch (error) {
       console.error('Erro ao gerar 3MF:', error)

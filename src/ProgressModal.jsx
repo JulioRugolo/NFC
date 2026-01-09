@@ -25,19 +25,19 @@ export default function ProgressModal({ isOpen, progress, message, onClose }) {
           </div>
           
           <div className="progress-steps">
-            <div className={`step ${progress >= 20 ? 'completed' : progress >= 10 ? 'active' : ''}`}>
+            <div className={`step ${progress >= 25 ? 'completed' : progress >= 15 ? 'active' : ''}`}>
               <span className="step-icon">1</span>
               <span className="step-label">Preparando modelo...</span>
             </div>
-            <div className={`step ${progress >= 50 ? 'completed' : progress >= 40 ? 'active' : ''}`}>
+            <div className={`step ${progress >= 60 ? 'completed' : progress >= 50 ? 'active' : ''}`}>
               <span className="step-icon">2</span>
               <span className="step-label">Gerando base...</span>
             </div>
-            <div className={`step ${progress >= 80 ? 'completed' : progress >= 70 ? 'active' : ''}`}>
+            <div className={`step ${progress >= 85 ? 'completed' : progress >= 75 ? 'active' : ''}`}>
               <span className="step-icon">3</span>
               <span className="step-label">Gerando texto...</span>
             </div>
-            <div className={`step ${progress >= 100 ? 'completed' : progress >= 90 ? 'active' : ''}`}>
+            <div className={`step ${progress >= 100 ? 'completed' : progress >= 95 ? 'active' : ''}`}>
               <span className="step-icon">4</span>
               <span className="step-label">Finalizando...</span>
             </div>
