@@ -186,24 +186,10 @@ app.post('/api/generate-and-export-3mf', async (req, res) => {
     console.log(`📝 Arquivo OpenSCAD criado: ${scadFile}`)
 
     // 2. Detecta OpenSCAD
-    const { openscadPath, isMac } = await findOpenSCAD()
+    const { openscadPath } = await findOpenSCAD()
 
-    // 3. Abre no OpenSCAD (opcional, mas ajuda o usuário ver o modelo)
-    try {
-      if (isMac) {
-        await execAsync(`open -a OpenSCAD "${scadFile}"`)
-      } else {
-        await execAsync(`"${openscadPath}" "${scadFile}"`)
-      }
-      console.log('✅ Arquivo aberto no OpenSCAD')
-    } catch (openErr) {
-      console.warn('⚠️ Não foi possível abrir no OpenSCAD:', openErr.message)
-    }
-
-    // 4. Aguarda um pouco para o OpenSCAD abrir
-    await new Promise(resolve => setTimeout(resolve, 2000))
-
-    // 5. Executa OpenSCAD via linha de comando para renderizar e exportar 3MF
+    // 3. Executa OpenSCAD via linha de comando para renderizar e exportar 3MF
+    // Nota: Não tentamos abrir GUI no servidor (Railway/Docker não tem display)
     const openscadCommand = `"${openscadPath}" -o "${output3mfFile}" "${scadFile}"`
     console.log(`🔧 Executando: ${openscadCommand}`)
     
