@@ -143,10 +143,11 @@ header .header-instruction {
 }
 
 .contact-buttons {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
+  display: flex;
+  gap: 12px;
   width: 100%;
+  align-items: center;
+  justify-content: flex-start;
 }
 
 .btn {
@@ -165,6 +166,49 @@ header .header-instruction {
   width: 100%;
   text-align: center;
   word-break: break-word;
+}
+
+.btn-icon {
+  padding: 10px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  min-width: 44px;
+  min-height: 44px;
+  width: 44px;
+  height: 44px;
+  font-size: 20px;
+  background: white;
+}
+
+.btn-phone-icon {
+  background: #495057;
+  color: white;
+}
+
+.btn-phone-icon:active {
+  background: #343a40;
+  transform: scale(0.95);
+}
+
+.btn-whatsapp-icon {
+  background: #25d366;
+  color: white;
+}
+
+.btn-whatsapp-icon:active {
+  background: #20ba5a;
+  transform: scale(0.95);
+}
+
+.btn-whatsapp-icon svg {
+  width: 24px;
+  height: 24px;
 }
 
 .btn-phone {
