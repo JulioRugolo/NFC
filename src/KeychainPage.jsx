@@ -1223,7 +1223,8 @@ ${trianglesXML}        </triangles>
             {stlData ? (
               <div>
                 <Keychain3DViewer 
-                  stlData={stlData} 
+                  baseStlData={stlData.base}
+                  textStlData={stlData.text}
                   baseColor={keychainConfig.baseColor}
                   textColor={keychainConfig.textColor}
                 />
