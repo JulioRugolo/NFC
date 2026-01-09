@@ -48,7 +48,7 @@ function parseSTL(stlString) {
   return { vertices, normals, vertexCount }
 }
 
-export default function Keychain3DViewer({ stlData, baseColor = '#4a90e2', textColor = '#ffffff' }) {
+export default function Keychain3DViewer({ stlData, baseStlData, textStlData, baseColor = '#4a90e2', textColor = '#ffffff' }) {
   const containerRef = useRef(null)
   const sceneRef = useRef(null)
   const rendererRef = useRef(null)
@@ -57,8 +57,21 @@ export default function Keychain3DViewer({ stlData, baseColor = '#4a90e2', textC
   const textMeshRef = useRef(null)
 
   useEffect(() => {
-    if (!stlData || !containerRef.current) return
-    if (typeof stlData !== 'object' || !stlData.base || !stlData.text) return
+    // Suporta tanto o formato antigo (stlData) quanto o novo (baseStlData/textStlData)
+    let baseStl = null
+    let textStl = null
+    
+    if (stlData && typeof stlData === 'object' && stlData.base && stlData.text) {
+      // Formato antigo: objeto com base e text
+      baseStl = stlData.base
+      textStl = stlData.text
+    } else if (baseStlData && textStlData) {
+      // Formato novo: props separadas
+      baseStl = baseStlData
+      textStl = textStlData
+    }
+    
+    if (!baseStl || !textStl || !containerRef.current) return
 
     // Limpa o container antes de criar novo modelo
     if (containerRef.current.firstChild) {
@@ -103,7 +116,7 @@ export default function Keychain3DViewer({ stlData, baseColor = '#4a90e2', textC
     // Carrega os modelos STL (base e texto separados)
     try {
       // Carrega STL da base
-      const baseData = parseSTL(stlData.base)
+      const baseData = parseSTL(baseStl)
       if (baseData.vertices.length === 0) {
         throw new Error('STL da base vazio ou formato inválido')
       }
@@ -118,7 +131,7 @@ export default function Keychain3DViewer({ stlData, baseColor = '#4a90e2', textC
       }
 
       // Carrega STL do texto
-      const textData = parseSTL(stlData.text)
+      const textData = parseSTL(textStl)
       if (textData.vertices.length === 0) {
         throw new Error('STL do texto vazio ou formato inválido')
       }
@@ -276,7 +289,7 @@ export default function Keychain3DViewer({ stlData, baseColor = '#4a90e2', textC
       }
       renderer.dispose()
     }
-  }, [stlData, baseColor, textColor])
+  }, [stlData, baseStlData, textStlData, baseColor, textColor])
 
   // Atualiza cores quando mudarem (sem recriar o modelo)
   useEffect(() => {
@@ -290,7 +303,11 @@ export default function Keychain3DViewer({ stlData, baseColor = '#4a90e2', textC
     }
   }, [baseColor, textColor])
 
-  if (!stlData || typeof stlData !== 'object' || !stlData.base || !stlData.text) {
+  // Verifica se tem dados para exibir (suporta ambos os formatos)
+  const hasData = (stlData && typeof stlData === 'object' && stlData.base && stlData.text) || 
+                 (baseStlData && textStlData)
+  
+  if (!hasData) {
     return (
       <div style={{
         width: '100%',
