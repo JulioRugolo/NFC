@@ -582,7 +582,7 @@ ${trianglesXML}        </triangles>
       <div className="config-container">
         <header className="config-header">
           <h1>🔑 Personalizador de Chaveiro 3D</h1>
-          <p>Configure os parâmetros do seu chaveiro personalizado</p>
+          <p>Configure os parâmetros do seu chaveiro personalizado e gere o arquivo para impressão 3D</p>
         </header>
 
         {/* Visualização 3D - Temporariamente desabilitada devido a incompatibilidade de versões */}
@@ -592,7 +592,7 @@ ${trianglesXML}        </triangles>
           <div className="form-group">
             <label htmlFor="name">
               <span className="icon">✏️</span>
-              Nome (Linha 1)
+              Nome Principal (Linha 1) <span style={{fontSize: '0.85em', fontWeight: 'normal', color: '#666'}}>* Obrigatório</span>
             </label>
             <input
               type="text"
@@ -602,6 +602,7 @@ ${trianglesXML}        </triangles>
               onChange={handleChange}
               placeholder="Ex: João Silva"
             />
+            <p className="form-help">Digite o nome que aparecerá na primeira linha do chaveiro</p>
           </div>
 
           <div className="form-group">
@@ -612,15 +613,16 @@ ${trianglesXML}        </triangles>
                 checked={keychainConfig.show2ndLine}
                 onChange={handleChange}
               />
-              <span className="checkbox-text">Mostrar segunda linha</span>
+              <span className="checkbox-text">Adicionar segunda linha de texto</span>
             </label>
+            <p className="form-help">Marque esta opção se quiser adicionar uma segunda linha abaixo do nome (ex: telefone, endereço, etc)</p>
           </div>
 
           {keychainConfig.show2ndLine && (
             <div className="form-group">
               <label htmlFor="line2">
                 <span className="icon">✏️</span>
-                Texto da Linha 2
+                Texto da Segunda Linha
               </label>
               <input
                 type="text"
@@ -630,6 +632,7 @@ ${trianglesXML}        </triangles>
                 onChange={handleChange}
                 placeholder="Ex: Telefone: (11) 99999-9999"
               />
+              <p className="form-help">Digite o texto que aparecerá na segunda linha (pode ser telefone, endereço, email, etc)</p>
             </div>
           )}
 
@@ -641,8 +644,9 @@ ${trianglesXML}        </triangles>
                 checked={keychainConfig.faceDownMode}
                 onChange={handleChange}
               />
-              <span className="checkbox-text">Modo Face Down (texto invertido)</span>
+              <span className="checkbox-text">Texto invertido (Face Down)</span>
             </label>
+            <p className="form-help">Marque esta opção se o chaveiro será impresso de cabeça para baixo. O texto ficará mais fino para ser lido quando virado</p>
           </div>
 
           <div className="form-row">
@@ -661,12 +665,13 @@ ${trianglesXML}        </triangles>
                 max="50"
                 step="1"
               />
+              <p className="form-help">Tamanho do texto em milímetros. Valores maiores = texto maior (padrão: 15)</p>
             </div>
 
             <div className="form-group">
               <label htmlFor="thickness">
                 <span className="icon">📏</span>
-                Espessura da Base
+                Espessura da Base (Altura)
               </label>
               <input
                 type="number"
@@ -678,6 +683,7 @@ ${trianglesXML}        </triangles>
                 max="10"
                 step="0.5"
               />
+              <p className="form-help">Altura total do chaveiro em milímetros. Valores maiores = chaveiro mais grosso (padrão: 2mm)</p>
             </div>
           </div>
 
@@ -685,7 +691,7 @@ ${trianglesXML}        </triangles>
             <div className="form-group">
               <label htmlFor="textThickness">
                 <span className="icon">📏</span>
-                Espessura do Texto
+                Altura do Texto em Relevo
               </label>
               <input
                 type="number"
@@ -697,12 +703,13 @@ ${trianglesXML}        </triangles>
                 max="5"
                 step="0.1"
               />
+              <p className="form-help">Quanto o texto fica elevado acima da base. Valores maiores = texto mais destacado (padrão: 1mm)</p>
             </div>
 
             <div className="form-group">
               <label htmlFor="edgeRadius">
                 <span className="icon">📏</span>
-                Raio da Borda
+                Arredondamento das Bordas
               </label>
               <input
                 type="number"
@@ -714,6 +721,7 @@ ${trianglesXML}        </triangles>
                 max="10"
                 step="0.5"
               />
+              <p className="form-help">Quanto as bordas do texto ficam arredondadas. Valores maiores = bordas mais suaves (padrão: 3mm)</p>
             </div>
           </div>
 
@@ -721,7 +729,7 @@ ${trianglesXML}        </triangles>
             <div className="form-group">
               <label htmlFor="keychainHoleSize">
                 <span className="icon">🔗</span>
-                Tamanho do Buraco
+                Tamanho do Buraco do Chaveiro
               </label>
               <input
                 type="number"
@@ -733,12 +741,13 @@ ${trianglesXML}        </triangles>
                 max="10"
                 step="0.5"
               />
+              <p className="form-help">Diâmetro do buraco onde passa o anel do chaveiro. Ajuste conforme o tamanho do seu anel (padrão: 4mm)</p>
             </div>
 
             <div className="form-group">
               <label htmlFor="keychainHoleOffset">
                 <span className="icon">🔗</span>
-                Offset do Buraco
+                Distância do Buraco
               </label>
               <input
                 type="number"
@@ -750,6 +759,7 @@ ${trianglesXML}        </triangles>
                 max="10"
                 step="0.5"
               />
+              <p className="form-help">Distância do buraco até a borda esquerda do chaveiro. Valores maiores = buraco mais para a direita (padrão: 1mm)</p>
             </div>
           </div>
 
@@ -758,7 +768,7 @@ ${trianglesXML}        </triangles>
               <div className="form-group">
                 <label htmlFor="line2Offset">
                   <span className="icon">↔️</span>
-                  Offset Horizontal Linha 2
+                  Posição Horizontal da Linha 2
                 </label>
                 <input
                   type="number"
@@ -770,12 +780,13 @@ ${trianglesXML}        </triangles>
                   max="50"
                   step="1"
                 />
+                <p className="form-help">Mova a segunda linha para esquerda (valores negativos) ou direita (valores positivos). 0 = centralizado (padrão: 0)</p>
               </div>
 
               <div className="form-group">
                 <label htmlFor="line2VerticalOffset">
                   <span className="icon">↕️</span>
-                  Offset Vertical Linha 2
+                  Posição Vertical da Linha 2
                 </label>
                 <input
                   type="number"
@@ -787,6 +798,7 @@ ${trianglesXML}        </triangles>
                   max="50"
                   step="1"
                 />
+                <p className="form-help">Mova a segunda linha para cima (valores positivos) ou para baixo (valores negativos). Padrão: -15mm (abaixo da primeira linha)</p>
               </div>
             </div>
           )}
@@ -795,7 +807,7 @@ ${trianglesXML}        </triangles>
             <div className="form-group">
               <label htmlFor="font">
                 <span className="icon">🔤</span>
-                Fonte
+                Tipo de Fonte
               </label>
               <select
                 id="font"
@@ -807,12 +819,13 @@ ${trianglesXML}        </triangles>
                   <option key={font} value={font}>{font}</option>
                 ))}
               </select>
+              <p className="form-help">Escolha o estilo de letra do texto. "Chewy" é uma fonte mais arredondada e divertida (padrão)</p>
             </div>
 
             <div className="form-group">
               <label htmlFor="fontStyle">
                 <span className="icon">🔤</span>
-                Estilo da Fonte
+                Peso da Fonte (Negrito, Regular, etc)
               </label>
               <select
                 id="fontStyle"
@@ -824,17 +837,19 @@ ${trianglesXML}        </triangles>
                   <option key={style} value={style}>{style}</option>
                 ))}
               </select>
+              <p className="form-help">Escolha se o texto será normal, negrito, itálico, etc. "Black Italic" = negrito e itálico (padrão)</p>
             </div>
           </div>
 
           <div className="form-group">
             <label>
               <span className="icon">📦</span>
-              Caixa Personalizada (Opcional)
+              Caixa/Retângulo Adicional (Opcional - Avançado)
             </label>
+            <p className="form-help" style={{marginBottom: '1rem'}}>Adicione um retângulo extra ao chaveiro (útil para logos ou decorações). Deixe tudo em 0 para não adicionar nada.</p>
             <div className="form-row">
               <div className="form-group">
-                <label htmlFor="boxWidth">Largura</label>
+                <label htmlFor="boxWidth">Largura da Caixa</label>
                 <input
                   type="number"
                   id="boxWidth"
@@ -845,9 +860,10 @@ ${trianglesXML}        </triangles>
                   max="100"
                   step="1"
                 />
+                <p className="form-help" style={{fontSize: '0.8em'}}>Largura em mm</p>
               </div>
               <div className="form-group">
-                <label htmlFor="boxHeight">Altura</label>
+                <label htmlFor="boxHeight">Altura da Caixa</label>
                 <input
                   type="number"
                   id="boxHeight"
@@ -858,9 +874,10 @@ ${trianglesXML}        </triangles>
                   max="100"
                   step="1"
                 />
+                <p className="form-help" style={{fontSize: '0.8em'}}>Altura em mm</p>
               </div>
               <div className="form-group">
-                <label htmlFor="boxXOffset">Offset X</label>
+                <label htmlFor="boxXOffset">Posição Horizontal</label>
                 <input
                   type="number"
                   id="boxXOffset"
@@ -871,9 +888,10 @@ ${trianglesXML}        </triangles>
                   max="100"
                   step="1"
                 />
+                <p className="form-help" style={{fontSize: '0.8em'}}>Esquerda (-) ou direita (+)</p>
               </div>
               <div className="form-group">
-                <label htmlFor="boxYOffset">Offset Y</label>
+                <label htmlFor="boxYOffset">Posição Vertical</label>
                 <input
                   type="number"
                   id="boxYOffset"
@@ -884,6 +902,7 @@ ${trianglesXML}        </triangles>
                   max="100"
                   step="1"
                 />
+                <p className="form-help" style={{fontSize: '0.8em'}}>Abaixo (-) ou acima (+)</p>
               </div>
             </div>
           </div>
@@ -900,14 +919,17 @@ ${trianglesXML}        </triangles>
             </button>
           </div>
           <div style={{marginTop: '1rem', padding: '1rem', background: '#d1ecf1', border: '1px solid #bee5eb', borderRadius: '4px', fontSize: '0.9rem'}}>
-            <strong>💡 Como funciona:</strong> Ao clicar em "Gerar .scad, Abrir no OpenSCAD e Exportar .3mf", o sistema irá:
-            <ol style={{marginTop: '0.5rem', paddingLeft: '1.5rem'}}>
-              <li>Gerar o arquivo .scad com seus parâmetros</li>
-              <li>Abrir automaticamente no OpenSCAD</li>
-              <li>Renderizar e exportar como .3mf via linha de comando</li>
-              <li>Baixar o arquivo .3mf automaticamente</li>
+            <strong>💡 Como usar:</strong>
+            <ol style={{marginTop: '0.5rem', paddingLeft: '1.5rem', marginBottom: '0.5rem'}}>
+              <li>Preencha pelo menos o <strong>Nome Principal</strong> (obrigatório)</li>
+              <li>Ajuste os outros campos conforme sua preferência (valores padrão já estão configurados)</li>
+              <li>Clique em <strong>"Gerar .scad, Abrir no OpenSCAD e Exportar .3mf"</strong></li>
+              <li>O sistema gerará o arquivo .3mf automaticamente e fará o download</li>
+              <li>Abra o arquivo .3mf no Bambu Studio ou outro software de impressão 3D</li>
             </ol>
-            <strong>Requisitos:</strong> Servidor backend rodando (<code>npm run server</code>) e OpenSCAD instalado.
+            <p style={{marginTop: '0.5rem', marginBottom: 0}}>
+              <strong>💾 Alternativa:</strong> Você também pode baixar o arquivo .scad e abrir no OpenSCAD para visualizar e ajustar antes de exportar.
+            </p>
           </div>
         </form>
 
