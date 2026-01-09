@@ -5,6 +5,7 @@ import * as THREE from 'three'
 import JSZip from 'jszip'
 import Keychain3DViewer from './Keychain3DViewer'
 import ProgressModal from './ProgressModal'
+import Footer from './Footer'
 
 function KeychainPage() {
   const navigate = useNavigate()

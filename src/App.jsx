@@ -3,6 +3,7 @@ import { useLocation, Link } from 'react-router-dom'
 import './App.css'
 import ConfigPage from './ConfigPage'
 import KeychainPage from './KeychainPage'
+import Footer from './Footer'
 
 function App() {
   const location = useLocation()
@@ -200,11 +201,7 @@ function App() {
               </div>
             </div>
 
-            <footer className="home-footer">
-              <p className="footer-text">
-                Desenvolvido por <strong>BOTU3D</strong> - Tags NFC e Impressão 3D
-              </p>
-            </footer>
+            <Footer />
           </div>
         </div>
       </div>
@@ -352,30 +349,7 @@ function App() {
           </div>
         )}
 
-        <footer>
-          <div className="brand-section">
-            <div className="brand-info">
-              <h3>BOTU3D</h3>
-              <p className="brand-tagline">Tags NFC Personalizadas</p>
-            </div>
-            <div className="brand-contact">
-              <button 
-                className="contact-btn" 
-                onClick={() => handleWhatsApp('14991647966', false)}
-              >
-                <span className="contact-label">WhatsApp</span>
-                <span className="contact-phone">(14) 99164-7966</span>
-              </button>
-              <button 
-                className="contact-btn" 
-                onClick={() => handleWhatsApp('14991297163', false)}
-              >
-                <span className="contact-label">WhatsApp</span>
-                <span className="contact-phone">(14) 99129-7163</span>
-              </button>
-            </div>
-          </div>
-        </footer>
+        <Footer />
       </div>
     </div>
   )

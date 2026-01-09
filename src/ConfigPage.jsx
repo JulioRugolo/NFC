@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import './ConfigPage.css'
+import Footer from './Footer'
 
 function ConfigPage() {
   const navigate = useNavigate()
@@ -428,11 +429,12 @@ function ConfigPage() {
           </div>
         )}
 
-        <footer className="config-footer">
+        <div style={{ marginTop: '2rem', marginBottom: '1rem' }}>
           <button onClick={() => navigate('/')} className="back-link">
             ← Voltar para a página principal
           </button>
-        </footer>
+        </div>
+        <Footer />
       </div>
     </div>
   )
