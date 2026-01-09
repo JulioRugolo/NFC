@@ -44,13 +44,19 @@
   margin-bottom: 32px;
 }
 
-/* Reutiliza estilos de form-group e form-row do ConfigPage.css */
-/* Mas com prefixo keychain- para evitar conflitos se necessário */
-
 /* Mobile First - Keychain */
 @media (max-width: 767px) {
   .keychain-container {
     padding: 20px 16px;
+  }
+
+  .keychain-header {
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+  }
+
+  .keychain-header h1 {
+    font-size: 22px;
   }
 
   .keychain-form {
@@ -59,20 +65,45 @@
 }
 
 /* Tablet - Keychain */
-@media (min-width: 768px) {
+@media (min-width: 768px) and (max-width: 1023px) {
+  .keychain-page {
+    padding: 20px;
+  }
+
   .keychain-container {
     max-width: 90%;
+    margin: 0 auto;
+    padding: 32px 40px;
     border-radius: 12px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     min-height: auto;
-    padding: 30px 25px;
+  }
+
+  .keychain-header h1 {
+    font-size: 28px;
   }
 }
 
 /* Desktop - Keychain */
 @media (min-width: 1024px) {
+  .keychain-page {
+    padding: 20px;
+  }
+
   .keychain-container {
     max-width: 1000px;
-    padding: 40px 30px;
+    margin: 0 auto;
+    padding: 40px 60px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    min-height: auto;
+  }
+
+  .keychain-header h1 {
+    font-size: 32px;
+  }
+
+  .keychain-header p {
+    font-size: 16px;
   }
 }
