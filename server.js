@@ -11,30 +11,158 @@ const execAsync = promisify(exec)
 const app = express()
 const PORT = process.env.PORT || 3001
 
-// Serve arquivos estáticos do build do Vite (se existir)
-const distPath = join(process.cwd(), 'dist')
-access(distPath).then(() => {
-  app.use(express.static(distPath))
-  
-  // Rota catch-all para SPA - serve index.html para todas as rotas não-API
-  app.get('*', (req, res, next) => {
-    // Se for uma rota de API, passa para o próximo middleware
-    if (req.path.startsWith('/api/')) {
-      return next()
-    }
-    // Caso contrário, serve o index.html do frontend
-    res.sendFile(join(distPath, 'index.html'))
-  })
-  console.log('✅ Frontend estático servido de /dist')
-}).catch(() => {
-  console.log('⚠️ Pasta dist não encontrada - servindo apenas API')
-})
-
+// Middlewares básicos (devem vir primeiro)
 app.use(cors())
 app.use(express.json())
 
-// Função para gerar código OpenSCAD
+// Função para gerar código OpenSCAD (precisa estar antes das rotas)
 function generateOpenSCAD(config) {
+  const { name, line2, show2ndLine, faceDownMode, fontSize, thickness, textThickness,
+          keychainHoleSize, keychainHoleOffset, edgeRadius, line2Offset, line2VerticalOffset,
+          boxWidth, boxHeight, boxXOffset, boxYOffset, font, fontStyle } = config
+
+  return `// Parameters
+$fn = 100;
+name = "${name.replace(/"/g, '\\"')}"; // Change this to the desired name
+line2 = "${line2.replace(/"/g, '\\"')}"; // Change this to the desired second line text
+2ndline = ${show2ndLine};
+facedownmode = ${faceDownMode};
+fontSize = ${fontSize};       // Font size for the name
+line2Offset = ${line2Offset};    // Offset for the second line horizontally
+line2VerticalOffset = ${line2VerticalOffset}; // Vertical offset for the second line
+thickness = ${thickness};       // Thickness of the base
+textThickness = ${textThickness};
+
+keychainHoleSize = ${keychainHoleSize}; // Diameter of the keychain hole
+keychainHoleOffset = ${keychainHoleOffset};// Offset of the keychain hole from the left
+// Radius of edge, Increase to fill in gaps
+r = ${edgeRadius};
+
+// Box customization parameters
+boxWidth = ${boxWidth};      // Width of the box
+boxHeight = ${boxHeight};     // Height of the box
+boxXOffset = ${boxXOffset};     // Horizontal offset for the box
+boxYOffset = ${boxYOffset};   // Vertical offset for the box
+
+Font = "${font}"; // [Inter, Rubik, Open Sans, Inter Tight, Source Sans 3, Noto Emoji, Ubuntu Sans, Roboto Slab, Plus Jakarta Sans, Roboto Serif, HarmonyOS Sans, Roboto Flex, Roboto Mono, Playfair Display, Merriweather Sans, Noto Sans SC, Work Sans, Ubuntu Sans Mono, Raleway, Nunito Sans, Montserrat, Roboto, Roboto Condensed, Open Sans Condensed, Oswald, Noto Sans, Nunito]
+FontStyle = "${fontStyle}"; // [Black Italic, Thin, Bold, Medium, Thin Italic, Regular, Medium Italic, Bold Italic, ExtraBold Italic, ExtraBold, Light Italic, SemiBold Italic, Light, ExtraLight Italic, ExtraLight, SemiBold, Black, Italic]
+font = str(Font , ":style=", FontStyle);
+
+module keychain(name, line2, fontSize, thickness, textThickness, keychainHoleSize, keychainHoleOffset, font, 2ndline, line2Offset, line2VerticalOffset, boxWidth, boxHeight, boxXOffset, boxYOffset) {
+    // Create the background "bubble" for the first line
+    translate([0, 0, 0])
+        linear_extrude(height = thickness)
+            offset(r = r)
+                text(name, size = fontSize, valign = "center", halign = "left", font = font);
+
+    // Create the background "bubble" for the second line if 2ndline is true
+    if (2ndline) {
+        translate([line2Offset, line2VerticalOffset, 0])
+            linear_extrude(height = thickness)
+                offset(r = r)
+                    text(line2, size = fontSize, valign = "center", halign = "left", font = font);
+    }
+
+    // Extrude the text for the first line
+    if (facedownmode){
+          translate([0, 0, thickness])
+        color([0,0,0])linear_extrude(height = 0.1)
+            text(name, size = fontSize, valign = "center", halign = "left", font = font);  
+    } else{
+           translate([0, 0, thickness])
+        color([0,0,0])linear_extrude(height = textThickness)
+            text(name, size = fontSize, valign = "center", halign = "left", font = font);
+    }
+
+    // Extrude the text for the second line if 2ndline is true
+    if (2ndline) {
+        
+        if(facedownmode){
+            color([0,0,0])translate([line2Offset, line2VerticalOffset, thickness])
+            linear_extrude(height = 0.1)
+                text(line2, size = fontSize, valign = "center", halign = "left", font = font);
+        }else{
+            color([0,0,0])translate([line2Offset, line2VerticalOffset, thickness])
+            linear_extrude(height = textThickness)
+                text(line2, size = fontSize, valign = "center", halign = "left", font = font);
+        }
+    }
+    
+    // Add the customizable box
+    translate([boxXOffset, boxYOffset, 0])
+        linear_extrude(height = thickness)
+            square([boxWidth, boxHeight], center = false);
+
+    difference() {
+        // Add the keychain hole
+        union() {
+            translate([-keychainHoleOffset - 3, 0, 0]) {
+                cylinder(h = thickness, d = keychainHoleSize + 3, center = false);
+            }
+            translate([-keychainHoleOffset - 4, -keychainHoleSize / 2 - 1.25, 0]){
+                cube(size = [7 + keychainHoleOffset, keychainHoleSize + 2.5, thickness], center = false);
+            }
+        }
+        translate([-keychainHoleOffset - 3, 0, 0]) {
+            cylinder(h = thickness, d = keychainHoleSize, center = false);
+        }
+    }
+}
+
+// Main call
+keychain(name, line2, fontSize, thickness, textThickness, keychainHoleSize, keychainHoleOffset, font, 2ndline, line2Offset, line2VerticalOffset, boxWidth, boxHeight, boxXOffset, boxYOffset);
+`
+}
+
+// Função auxiliar para detectar OpenSCAD
+async function findOpenSCAD() {
+  const isWindows = process.platform === 'win32'
+  const isMac = process.platform === 'darwin'
+  let openscadPath = null
+  
+  if (isMac) {
+    const macPath = '/Applications/OpenSCAD.app/Contents/MacOS/OpenSCAD'
+    try {
+      await access(macPath)
+      openscadPath = macPath
+    } catch {
+      try {
+        const { stdout } = await execAsync('which openscad')
+        openscadPath = stdout.trim()
+      } catch {
+        openscadPath = 'openscad'
+      }
+    }
+  } else if (isWindows) {
+    const windowsPaths = [
+      'C:\\Program Files\\OpenSCAD\\openscad.exe',
+      'C:\\Program Files (x86)\\OpenSCAD\\openscad.exe'
+    ]
+    for (const path of windowsPaths) {
+      try {
+        await access(path)
+        openscadPath = path
+        break
+      } catch {}
+    }
+    if (!openscadPath) {
+      openscadPath = 'openscad.exe'
+    }
+  } else {
+    try {
+      const { stdout } = await execAsync('which openscad')
+      openscadPath = stdout.trim()
+    } catch {
+      openscadPath = 'openscad'
+    }
+  }
+  
+  return { openscadPath, isMac, isWindows }
+}
+
+// ========== ROTAS DE API (devem vir ANTES do catch-all) ==========
+
+// Remover duplicação - função já definida acima
   const { name, line2, show2ndLine, faceDownMode, fontSize, thickness, textThickness,
           keychainHoleSize, keychainHoleOffset, edgeRadius, line2Offset, line2VerticalOffset,
           boxWidth, boxHeight, boxXOffset, boxYOffset, font, fontStyle } = config
@@ -414,11 +542,33 @@ app.post('/api/generate-3mf', async (req, res) => {
   }
 })
 
-// Rota de health check
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', message: 'Servidor funcionando' })
+// ========== SERVER STATIC FILES AND CATCH-ALL (DEPOIS DE TODAS AS ROTAS DE API) ==========
+
+// Serve arquivos estáticos e rota catch-all (depois das APIs)
+const distPath = join(process.cwd(), 'dist')
+access(distPath).then(() => {
+  // Serve arquivos estáticos (CSS, JS, imagens, etc)
+  app.use(express.static(distPath))
+  
+  // Rota catch-all para SPA - DEVE vir por último, depois de todas as rotas de API
+  // Serve index.html para todas as rotas que não são API
+  app.get('*', (req, res) => {
+    res.sendFile(join(distPath, 'index.html'))
+  })
+  console.log('✅ Frontend estático servido de /dist')
+}).catch(() => {
+  console.log('⚠️ Pasta dist não encontrada - servindo apenas API')
+  
+  // Mesmo sem dist, adiciona rota catch-all para não dar erro 404
+  app.get('*', (req, res) => {
+    if (req.path.startsWith('/api/')) {
+      return res.status(404).json({ error: 'Rota de API não encontrada' })
+    }
+    res.status(404).send('Frontend não encontrado. Execute "npm run build" primeiro.')
+  })
 })
 
+// ========== INICIAR SERVIDOR ==========
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Servidor rodando na porta ${PORT}`)
   console.log(`📦 Endpoint: http://localhost:${PORT}/api/generate-3mf`)
