@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
 import './App.css'
 import ConfigPage from './ConfigPage'
+import KeychainPage from './KeychainPage'
 
 function App() {
   const location = useLocation()
@@ -9,6 +10,11 @@ function App() {
   // Se estiver na rota /config, mostra a página de configuração
   if (location.pathname === '/config') {
     return <ConfigPage />
+  }
+  
+  // Se estiver na rota /keychain, mostra a página de personalização de chaveiro
+  if (location.pathname === '/keychain') {
+    return <KeychainPage />
   }
   const [info, setInfo] = useState({
     tipo: 'crianca', // 'crianca' ou 'pet'
