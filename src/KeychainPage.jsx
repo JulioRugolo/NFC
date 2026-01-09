@@ -838,8 +838,8 @@ ${trianglesXML}        </triangles>
             <p className="form-help">Marque esta opção se o chaveiro será impresso de cabeça para baixo. O texto ficará mais fino para ser lido quando virado</p>
           </div>
 
-          <div className="form-row">
-            <div className="form-group">
+          <div className="keychain-inputs-grid">
+            <div className="form-group keychain-input-small">
               <label htmlFor="fontSize">
                 <span className="icon">📏</span>
                 Tamanho da Fonte
@@ -853,14 +853,15 @@ ${trianglesXML}        </triangles>
                 min="5"
                 max="50"
                 step="1"
+                className="keychain-number-input"
               />
               <p className="form-help">Tamanho do texto em milímetros. Valores maiores = texto maior (padrão: 15)</p>
             </div>
 
-            <div className="form-group">
+            <div className="form-group keychain-input-small">
               <label htmlFor="thickness">
                 <span className="icon">📏</span>
-                Espessura da Base (Altura)
+                Espessura da Base
               </label>
               <input
                 type="number"
@@ -871,16 +872,15 @@ ${trianglesXML}        </triangles>
                 min="1"
                 max="10"
                 step="0.5"
+                className="keychain-number-input"
               />
-              <p className="form-help">Altura total do chaveiro em milímetros. Valores maiores = chaveiro mais grosso (padrão: 2mm)</p>
+              <p className="form-help">Altura total do chaveiro em milímetros (padrão: 2mm)</p>
             </div>
-          </div>
 
-          <div className="form-row">
-            <div className="form-group">
+            <div className="form-group keychain-input-small">
               <label htmlFor="textThickness">
                 <span className="icon">📏</span>
-                Altura do Texto em Relevo
+                Altura do Texto
               </label>
               <input
                 type="number"
@@ -891,14 +891,15 @@ ${trianglesXML}        </triangles>
                 min="0.1"
                 max="5"
                 step="0.1"
+                className="keychain-number-input"
               />
-              <p className="form-help">Quanto o texto fica elevado acima da base. Valores maiores = texto mais destacado (padrão: 1mm)</p>
+              <p className="form-help">Quanto o texto fica elevado (padrão: 1mm)</p>
             </div>
 
-            <div className="form-group">
+            <div className="form-group keychain-input-small">
               <label htmlFor="edgeRadius">
                 <span className="icon">📏</span>
-                Raio da Borda (r) - Preencher Buracos
+                Raio da Borda (r)
               </label>
               <input
                 type="number"
@@ -909,20 +910,15 @@ ${trianglesXML}        </triangles>
                 min="0"
                 max="10"
                 step="0.5"
+                className="keychain-number-input"
               />
-              <p className="form-help">
-                <strong>Importante:</strong> Aumenta o contorno da borda da fonte para preencher buracos e espaços vazios no texto. 
-                Se o texto tiver letras com espaços internos (como "A", "O", "P", etc), aumente este valor para preencher esses buracos. 
-                Valores maiores = mais preenchimento (padrão: 3mm)
-              </p>
+              <p className="form-help">Preenche buracos no texto (padrão: 3mm)</p>
             </div>
-          </div>
 
-          <div className="form-row">
-            <div className="form-group">
+            <div className="form-group keychain-input-small">
               <label htmlFor="keychainHoleSize">
                 <span className="icon">🔗</span>
-                Tamanho do Buraco do Chaveiro
+                Tamanho do Buraco
               </label>
               <input
                 type="number"
@@ -933,11 +929,12 @@ ${trianglesXML}        </triangles>
                 min="2"
                 max="10"
                 step="0.5"
+                className="keychain-number-input"
               />
-              <p className="form-help">Diâmetro do buraco onde passa o anel do chaveiro. Ajuste conforme o tamanho do seu anel (padrão: 4mm)</p>
+              <p className="form-help">Diâmetro do buraco (padrão: 4mm)</p>
             </div>
 
-            <div className="form-group">
+            <div className="form-group keychain-input-small">
               <label htmlFor="keychainHoleOffset">
                 <span className="icon">🔗</span>
                 Distância do Buraco
@@ -951,8 +948,9 @@ ${trianglesXML}        </triangles>
                 min="0"
                 max="10"
                 step="0.5"
+                className="keychain-number-input"
               />
-              <p className="form-help">Distância do buraco até a borda esquerda do chaveiro. Valores maiores = buraco mais para a direita (padrão: 1mm)</p>
+              <p className="form-help">Distância até a borda (padrão: 1mm)</p>
             </div>
           </div>
 
