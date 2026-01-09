@@ -1,9 +1,10 @@
 # Dockerfile para Railway com OpenSCAD pré-instalado
 FROM node:18-slim
 
-# Instala dependências do sistema e OpenSCAD
+# Instala dependências do sistema, OpenSCAD e Xvfb (para renderização sem display)
 RUN apt-get update && apt-get install -y \
     openscad \
+    xvfb \
     && rm -rf /var/lib/apt/lists/*
 
 # Define o diretório de trabalho

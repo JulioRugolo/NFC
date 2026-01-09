@@ -188,16 +188,21 @@ app.post('/api/generate-preview', async (req, res) => {
     // 2. Detecta OpenSCAD
     const { openscadPath } = await findOpenSCAD()
 
-    // 3. Renderiza imagem PNG usando OpenSCAD
+    // 3. Renderiza imagem PNG usando OpenSCAD com Xvfb (para servidor sem display)
+    // Xvfb cria um framebuffer virtual para o OpenSCAD renderizar
     // --render: renderiza o modelo completamente
     // --imgsize: tamanho da imagem (largura,altura)
     // --viewall: ajusta a câmera para mostrar tudo
+    // --autocenter: centraliza o modelo
     // -o com extensão .png: exporta como PNG
-    const previewCommand = `"${openscadPath}" --render --imgsize=800,600 --viewall --autocenter "${scadFile}" -o "${previewImage}"`
+    const isLinux = process.platform === 'linux'
+    const previewCommand = isLinux
+      ? `xvfb-run -a -s "-screen 0 1024x768x24" "${openscadPath}" --render --imgsize=800,600 --viewall --autocenter "${scadFile}" -o "${previewImage}"`
+      : `"${openscadPath}" --render --imgsize=800,600 --viewall --autocenter "${scadFile}" -o "${previewImage}"`
     console.log(`🔧 Gerando preview: ${previewCommand}`)
 
     try {
-      const { stdout, stderr } = await execAsync(previewCommand, { timeout: 30000 })
+      const { stdout, stderr } = await execAsync(previewCommand, { timeout: 60000 })
       
       if (stderr && !stderr.includes('WARNING')) {
         console.warn('OpenSCAD stderr:', stderr)
