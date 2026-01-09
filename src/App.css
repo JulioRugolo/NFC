@@ -486,9 +486,22 @@ footer {
   }
 
   .contact-buttons {
-    grid-template-columns: 1fr 1fr;
-    gap: 6px;
+    gap: 10px;
     width: 100%;
+  }
+
+  .btn-icon {
+    min-width: 40px;
+    min-height: 40px;
+    width: 40px;
+    height: 40px;
+    padding: 8px;
+    font-size: 18px;
+  }
+
+  .btn-whatsapp-icon svg {
+    width: 20px;
+    height: 20px;
   }
 
   .btn {
