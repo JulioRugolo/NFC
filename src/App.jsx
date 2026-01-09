@@ -276,10 +276,6 @@ function App() {
             <div className="responsibles-content">
               {info.nomePai && (
                 <div className="responsible-item responsible-item-pai">
-                  <div className="responsible-header">
-                    <span className="responsible-label">{info.tipo === 'pet' ? 'Tutor:' : 'Pai:'}</span>
-                    <span className="responsible-name">{info.nomePai}</span>
-                  </div>
                   {info.telefonePai && (
                     <div className="contact-section">
                       <div className="contact-info">
