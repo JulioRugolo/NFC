@@ -871,7 +871,7 @@ ${trianglesXML}        </triangles>
             <div className="form-group">
               <label htmlFor="edgeRadius">
                 <span className="icon">📏</span>
-                Arredondamento das Bordas
+                Raio da Borda (r) - Preencher Buracos
               </label>
               <input
                 type="number"
@@ -883,7 +883,11 @@ ${trianglesXML}        </triangles>
                 max="10"
                 step="0.5"
               />
-              <p className="form-help">Quanto as bordas do texto ficam arredondadas. Valores maiores = bordas mais suaves (padrão: 3mm)</p>
+              <p className="form-help">
+                <strong>Importante:</strong> Aumenta o contorno da borda da fonte para preencher buracos e espaços vazios no texto. 
+                Se o texto tiver letras com espaços internos (como "A", "O", "P", etc), aumente este valor para preencher esses buracos. 
+                Valores maiores = mais preenchimento (padrão: 3mm)
+              </p>
             </div>
           </div>
 
