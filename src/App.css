@@ -312,34 +312,157 @@ footer {
   letter-spacing: 0.3px;
 }
 
-/* Mobile First - já está otimizado para mobile */
+/* Página NFC - Mobile First (focada em mobile) */
+/* Mobile pequeno */
 @media (max-width: 360px) {
   header {
     padding: 16px 12px;
   }
 
   header h1.child-name {
-    font-size: 20px;
+    font-size: 18px;
+  }
+
+  .header-subtitle {
+    font-size: 12px;
+  }
+
+  .address-text {
+    font-size: 12px;
+  }
+
+  .header-instruction {
+    font-size: 11px;
   }
 
   .responsibles-section {
     padding: 12px;
   }
 
-  .brand-info h3 {
-    font-size: 18px;
+  .responsible-item {
+    padding: 12px;
+  }
+
+  .responsible-name {
+    font-size: 14px;
+  }
+
+  .contact-buttons {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .btn {
+    padding: 12px;
+    font-size: 14px;
+  }
+
+  .brand-contact {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Mobile padrão */
+@media (max-width: 767px) {
+  .app {
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+
+  .container {
+    min-height: 100vh;
+    height: auto;
+    overflow: visible;
+  }
+
+  header {
+    padding: 18px 16px;
+  }
+
+  header h1.child-name {
+    font-size: 20px;
+    flex-wrap: wrap;
+    word-break: break-word;
+  }
+
+  .header-subtitle {
+    font-size: 13px;
+    line-height: 1.4;
+  }
+
+  .address-text {
+    font-size: 12px;
+    word-break: break-word;
+    padding: 0 8px;
+  }
+
+  .header-instruction {
+    font-size: 11px;
+    padding: 0 8px;
+    line-height: 1.5;
+  }
+
+  .responsibles-section {
+    padding: 16px 12px;
+  }
+
+  .section-title {
+    font-size: 12px;
+    margin-bottom: 12px;
+  }
+
+  .responsible-item {
+    padding: 14px 12px;
+  }
+
+  .responsible-header {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .responsible-label {
+    font-size: 12px;
+    min-width: auto;
+  }
+
+  .responsible-name {
+    font-size: 15px;
+    word-break: break-word;
+  }
+
+  .contact-buttons {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .btn {
+    padding: 12px 10px;
+    font-size: 13px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .btn-phone {
+    font-size: 12px;
+  }
+
+  .btn-instagram-small {
+    font-size: 12px;
+    padding: 10px;
   }
 
   footer {
     padding: 16px 12px;
   }
 
-  .contact-buttons {
-    grid-template-columns: 1fr;
-  }
-
   .brand-contact {
     grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .contact-btn {
+    padding: 12px;
   }
 }
 
