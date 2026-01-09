@@ -167,6 +167,88 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'Servidor funcionando' })
 })
 
+// Rota para gerar modelo 3D (STL) para visualização interativa
+app.post('/api/generate-3d-model', async (req, res) => {
+  const config = req.body
+  const tempId = randomUUID()
+  const tempDir = tmpdir()
+  const scadFile = join(tempDir, `keychain_3d_${tempId}.scad`)
+  const stlFile = join(tempDir, `keychain_3d_${tempId}.stl`)
+
+  try {
+    if (!config.name) {
+      return res.status(400).json({ error: 'Nome é obrigatório' })
+    }
+
+    // 1. Gera o arquivo OpenSCAD
+    const openSCADCode = generateOpenSCAD(config)
+    await writeFile(scadFile, openSCADCode, 'utf8')
+    console.log(`📝 Arquivo OpenSCAD criado para modelo 3D: ${scadFile}`)
+
+    // 2. Detecta OpenSCAD
+    const { openscadPath } = await findOpenSCAD()
+
+    // 3. Gera STL usando OpenSCAD
+    const isLinux = process.platform === 'linux'
+    const stlCommand = isLinux
+      ? `xvfb-run -a -s "-screen 0 1024x768x24" "${openscadPath}" -o "${stlFile}" "${scadFile}"`
+      : `"${openscadPath}" -o "${stlFile}" "${scadFile}"`
+    console.log(`🔧 Gerando STL: ${stlCommand}`)
+
+    try {
+      const { stdout, stderr } = await execAsync(stlCommand, { timeout: 60000 })
+      
+      if (stderr && !stderr.includes('WARNING')) {
+        console.warn('OpenSCAD stderr:', stderr)
+      }
+
+      // Verifica se o arquivo foi criado
+      const stlContent = await readFile(stlFile)
+      
+      if (stlContent.length === 0) {
+        throw new Error('Arquivo STL gerado está vazio')
+      }
+
+      // Limpa arquivo temporário
+      await unlink(scadFile).catch(() => {})
+
+      // Retorna o STL como base64
+      const base64STL = stlContent.toString('base64')
+      
+      // Limpa o STL após enviar
+      setTimeout(() => {
+        unlink(stlFile).catch(() => {})
+      }, 5000)
+
+      res.json({
+        success: true,
+        stl: base64STL,
+        filename: `keychain_${config.name.replace(/\s+/g, '_')}.stl`
+      })
+
+    } catch (stlErr) {
+      console.error('Erro ao gerar STL:', stlErr)
+      
+      // Limpa arquivos temporários
+      await unlink(scadFile).catch(() => {})
+      await unlink(stlFile).catch(() => {})
+      
+      throw new Error(`Erro ao gerar modelo 3D: ${stlErr.message}`)
+    }
+
+  } catch (error) {
+    console.error('Erro ao gerar modelo 3D:', error)
+    
+    await unlink(scadFile).catch(() => {})
+    await unlink(stlFile).catch(() => {})
+    
+    res.status(500).json({
+      error: 'Erro ao gerar modelo 3D',
+      message: error.message
+    })
+  }
+})
+
 // Rota para gerar visualização 3D (imagem PNG)
 app.post('/api/generate-preview', async (req, res) => {
   const config = req.body

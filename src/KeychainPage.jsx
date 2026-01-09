@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import './ConfigPage.css'
 import * as THREE from 'three'
 import JSZip from 'jszip'
+import Keychain3DViewer from './Keychain3DViewer'
 
 function KeychainPage() {
   const navigate = useNavigate()
@@ -30,6 +31,8 @@ function KeychainPage() {
 
   const [previewImage, setPreviewImage] = useState(null)
   const [isGeneratingPreview, setIsGeneratingPreview] = useState(false)
+  const [stlData, setStlData] = useState(null)
+  const [isGenerating3D, setIsGenerating3D] = useState(false)
 
   const fonts = [
     'Inter', 'Rubik', 'Open Sans', 'Inter Tight', 'Source Sans 3', 'Noto Emoji',
@@ -639,48 +642,32 @@ ${trianglesXML}        </triangles>
           <p>Configure os parâmetros do seu chaveiro personalizado e gere o arquivo para impressão 3D</p>
         </header>
 
-        {/* Visualização 3D */}
+        {/* Visualização 3D Interativa */}
         <div style={{ marginBottom: '2rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-            <h2 style={{ fontSize: '1.3rem', margin: 0 }}>👁️ Visualização 3D do Chaveiro</h2>
+            <h2 style={{ fontSize: '1.3rem', margin: 0 }}>👁️ Visualização 3D Interativa do Chaveiro</h2>
             <button
               type="button"
               className="btn btn-primary"
-              onClick={generatePreview}
-              disabled={isGeneratingPreview || !keychainConfig.name}
+              onClick={generate3DModel}
+              disabled={isGenerating3D || !keychainConfig.name}
               style={{ minWidth: '200px' }}
             >
-              {isGeneratingPreview ? '⏳ Gerando...' : '🖼️ Gerar Visualização'}
+              {isGenerating3D ? '⏳ Gerando modelo 3D...' : '🎮 Gerar Visualização 3D'}
             </button>
           </div>
           
-          {previewImage ? (
-            <div style={{
-              width: '100%',
-              border: '1px solid #ddd',
-              borderRadius: '8px',
-              background: '#fff',
-              padding: '1rem',
-              textAlign: 'center'
-            }}>
-              <img
-                src={previewImage}
-                alt="Preview do chaveiro"
-                style={{
-                  maxWidth: '100%',
-                  height: 'auto',
-                  borderRadius: '4px',
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-                }}
-              />
-              <p style={{ marginTop: '0.5rem', fontSize: '0.9em', color: '#666' }}>
-                ✅ Visualização gerada pelo OpenSCAD - Esta é a renderização real do modelo!
+          {stlData ? (
+            <div>
+              <Keychain3DViewer stlData={stlData} />
+              <p style={{ marginTop: '0.5rem', fontSize: '0.9em', color: '#666', textAlign: 'center' }}>
+                ✅ Modelo 3D gerado pelo OpenSCAD - Arraste para rotacionar e use o scroll para dar zoom!
               </p>
             </div>
           ) : (
             <div style={{
               width: '100%',
-              height: '400px',
+              height: '500px',
               border: '1px solid #ddd',
               borderRadius: '8px',
               background: '#f5f5f5',
@@ -693,12 +680,17 @@ ${trianglesXML}        </triangles>
               {!keychainConfig.name ? (
                 <>
                   <p style={{ fontSize: '1.1em', marginBottom: '0.5rem' }}>📝 Preencha o nome do chaveiro</p>
-                  <p style={{ fontSize: '0.9em' }}>Depois clique em "Gerar Visualização" para ver como ficará</p>
+                  <p style={{ fontSize: '0.9em' }}>Depois clique em "Gerar Visualização 3D" para ver o modelo interativo</p>
+                </>
+              ) : isGenerating3D ? (
+                <>
+                  <p style={{ fontSize: '1.1em', marginBottom: '0.5rem' }}>⏳ Gerando modelo 3D...</p>
+                  <p style={{ fontSize: '0.9em' }}>Aguarde enquanto o OpenSCAD processa o modelo</p>
                 </>
               ) : (
                 <>
-                  <p style={{ fontSize: '1.1em', marginBottom: '0.5rem' }}>👆 Clique em "Gerar Visualização"</p>
-                  <p style={{ fontSize: '0.9em' }}>O sistema renderizará o modelo 3D usando OpenSCAD</p>
+                  <p style={{ fontSize: '1.1em', marginBottom: '0.5rem' }}>👆 Clique em "Gerar Visualização 3D"</p>
+                  <p style={{ fontSize: '0.9em' }}>O sistema gerará um modelo 3D interativo que você pode rotacionar e dar zoom</p>
                 </>
               )}
             </div>
