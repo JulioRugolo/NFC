@@ -14,13 +14,7 @@
   min-height: 100vh;
   padding: 24px 20px;
   box-sizing: border-box;
-}
-
-/* Mobile First - Config e Keychain */
-@media (max-width: 767px) {
-  .config-container {
-    padding: 20px 16px;
-  }
+  margin: 0 auto;
 }
 
 .config-header {
@@ -310,12 +304,19 @@
   }
 }
 
-/* Tablet */
+/* Tablet - Config e Keychain */
 @media (min-width: 768px) and (max-width: 1023px) {
+  .config-page {
+    padding: 20px;
+  }
+
   .config-container {
     max-width: 90%;
     margin: 0 auto;
     padding: 32px 40px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    min-height: auto;
   }
 
   .config-header h1 {
@@ -331,12 +332,19 @@
   }
 }
 
-/* Desktop */
+/* Desktop - Config e Keychain */
 @media (min-width: 1024px) {
+  .config-page {
+    padding: 20px;
+  }
+
   .config-container {
     max-width: 1000px;
     margin: 0 auto;
     padding: 40px 60px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    min-height: auto;
   }
 
   .config-header h1 {
