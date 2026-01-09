@@ -539,18 +539,12 @@ footer {
 }
 
 /* Página NFC - Mobile First (focada em mobile) */
-/* Desktop/Tablet - apenas para preview da página NFC */
+/* Desktop/Tablet - apenas para preview da página NFC quando não for home */
 @media (min-width: 768px) {
-  /* Apenas aplica se NÃO for a home page */
-  .app:not(:has(.home-page)) {
-    padding: 20px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .app:not(:has(.home-page)) .container {
+  /* Aplica apenas para página NFC (quando tem container mas não é home-page) */
+  .app .container:not(.home-page *) {
     max-width: 480px;
+    margin: 20px auto;
     border-radius: 12px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     min-height: auto;
@@ -558,11 +552,11 @@ footer {
     max-height: 90vh;
   }
 
-  .app:not(:has(.home-page)) header {
+  .app .container:not(.home-page *) header {
     border-radius: 12px 12px 0 0;
   }
 
-  .app:not(:has(.home-page)) footer {
+  .app .container:not(.home-page *) footer {
     border-radius: 0 0 12px 12px;
   }
 
