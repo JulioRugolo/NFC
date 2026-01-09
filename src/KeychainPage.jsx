@@ -26,7 +26,9 @@ function KeychainPage() {
     boxXOffset: 0,
     boxYOffset: -30,
     font: 'Chewy',
-    fontStyle: 'Black Italic'
+    fontStyle: 'Black Italic',
+    baseColor: '#4a90e2', // Azul padrão
+    textColor: '#ffffff'   // Branco padrão
   })
 
   const [previewImage, setPreviewImage] = useState(null)
@@ -57,10 +59,23 @@ function KeychainPage() {
     }))
   }
 
+  // Converte cor hex para RGB 0-1 (formato OpenSCAD)
+  const hexToRgb = (hex) => {
+    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
+    return result ? [
+      parseInt(result[1], 16) / 255,
+      parseInt(result[2], 16) / 255,
+      parseInt(result[3], 16) / 255
+    ] : [0, 0, 0]
+  }
+
   const generateOpenSCAD = () => {
     const { name, line2, show2ndLine, faceDownMode, fontSize, thickness, textThickness,
             keychainHoleSize, keychainHoleOffset, edgeRadius, line2Offset, line2VerticalOffset,
-            boxWidth, boxHeight, boxXOffset, boxYOffset, font, fontStyle } = keychainConfig
+            boxWidth, boxHeight, boxXOffset, boxYOffset, font, fontStyle, baseColor, textColor } = keychainConfig
+    
+    const baseRgb = hexToRgb(baseColor)
+    const textRgb = hexToRgb(textColor)
 
     return `// Parameters
 $fn = 100;
@@ -89,16 +104,20 @@ Font = "${font}"; // [Inter, Rubik, Open Sans, Inter Tight, Source Sans 3, Noto 
 FontStyle = "${fontStyle}"; // [Black Italic, Thin, Bold, Medium, Thin Italic, Regular, Medium Italic, Bold Italic, ExtraBold Italic, ExtraBold, Light Italic, SemiBold Italic, Light, ExtraLight Italic, ExtraLight, SemiBold, Black, Italic]
 font = str(Font , ":style=", FontStyle);
 
-module keychain(name, line2, fontSize, thickness, textThickness, keychainHoleSize, keychainHoleOffset, font, 2ndline, line2Offset, line2VerticalOffset, boxWidth, boxHeight, boxXOffset, boxYOffset) {
+// Colors (RGB 0-1)
+baseColor = [${baseRgb[0]}, ${baseRgb[1]}, ${baseRgb[2]}];
+textColor = [${textRgb[0]}, ${textRgb[1]}, ${textRgb[2]}];
+
+module keychain(name, line2, fontSize, thickness, textThickness, keychainHoleSize, keychainHoleOffset, font, 2ndline, line2Offset, line2VerticalOffset, boxWidth, boxHeight, boxXOffset, boxYOffset, baseColor, textColor) {
     // Create the background "bubble" for the first line
-    translate([0, 0, 0])
+    color(baseColor) translate([0, 0, 0])
         linear_extrude(height = thickness)
             offset(r = r)
                 text(name, size = fontSize, valign = "center", halign = "left", font = font);
 
     // Create the background "bubble" for the second line if 2ndline is true
     if (2ndline) {
-        translate([line2Offset, line2VerticalOffset, 0])
+        color(baseColor) translate([line2Offset, line2VerticalOffset, 0])
             linear_extrude(height = thickness)
                 offset(r = r)
                     text(line2, size = fontSize, valign = "center", halign = "left", font = font);
@@ -106,12 +125,12 @@ module keychain(name, line2, fontSize, thickness, textThickness, keychainHoleSiz
 
     // Extrude the text for the first line
     if (facedownmode){
-          translate([0, 0, thickness])
-        color([0,0,0])linear_extrude(height = 0.1)
+          color(textColor) translate([0, 0, thickness])
+        linear_extrude(height = 0.1)
             text(name, size = fontSize, valign = "center", halign = "left", font = font);  
     } else{
-           translate([0, 0, thickness])
-        color([0,0,0])linear_extrude(height = textThickness)
+           color(textColor) translate([0, 0, thickness])
+        linear_extrude(height = textThickness)
             text(name, size = fontSize, valign = "center", halign = "left", font = font);
     }
 
@@ -119,24 +138,24 @@ module keychain(name, line2, fontSize, thickness, textThickness, keychainHoleSiz
     if (2ndline) {
         
         if(facedownmode){
-            color([0,0,0])translate([line2Offset, line2VerticalOffset, thickness])
+            color(textColor) translate([line2Offset, line2VerticalOffset, thickness])
             linear_extrude(height = 0.1)
                 text(line2, size = fontSize, valign = "center", halign = "left", font = font);
         }else{
-            color([0,0,0])translate([line2Offset, line2VerticalOffset, thickness])
+            color(textColor) translate([line2Offset, line2VerticalOffset, thickness])
             linear_extrude(height = textThickness)
                 text(line2, size = fontSize, valign = "center", halign = "left", font = font);
         }
     }
     
     // Add the customizable box
-    translate([boxXOffset, boxYOffset, 0])
+    color(baseColor) translate([boxXOffset, boxYOffset, 0])
         linear_extrude(height = thickness)
             square([boxWidth, boxHeight], center = false);
 
     difference() {
         // Add the keychain hole
-        union() {
+        color(baseColor) union() {
             translate([-keychainHoleOffset - 3, 0, 0]) {
                 cylinder(h = thickness, d = keychainHoleSize + 3, center = false);
             }
@@ -151,7 +170,7 @@ module keychain(name, line2, fontSize, thickness, textThickness, keychainHoleSiz
 }
 
 // Main call
-keychain(name, line2, fontSize, thickness, textThickness, keychainHoleSize, keychainHoleOffset, font, 2ndline, line2Offset, line2VerticalOffset, boxWidth, boxHeight, boxXOffset, boxYOffset);
+keychain(name, line2, fontSize, thickness, textThickness, keychainHoleSize, keychainHoleOffset, font, 2ndline, line2Offset, line2VerticalOffset, boxWidth, boxHeight, boxXOffset, boxYOffset, baseColor, textColor);
 `
   }
 
@@ -1004,6 +1023,90 @@ ${trianglesXML}        </triangles>
                 ))}
               </select>
               <p className="form-help">Escolha se o texto será normal, negrito, itálico, etc. "Black Italic" = negrito e itálico (padrão)</p>
+            </div>
+          </div>
+
+          <div className="form-row">
+            <div className="form-group">
+              <label htmlFor="baseColor">
+                <span className="icon">🎨</span>
+                Cor da Base/Borda
+              </label>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <input
+                  type="color"
+                  id="baseColor"
+                  name="baseColor"
+                  value={keychainConfig.baseColor}
+                  onChange={handleChange}
+                  style={{
+                    width: '60px',
+                    height: '40px',
+                    border: '1px solid #ddd',
+                    borderRadius: '4px',
+                    cursor: 'pointer'
+                  }}
+                />
+                <input
+                  type="text"
+                  value={keychainConfig.baseColor}
+                  onChange={(e) => {
+                    if (/^#[0-9A-F]{6}$/i.test(e.target.value)) {
+                      handleChange({ target: { name: 'baseColor', value: e.target.value } })
+                    }
+                  }}
+                  placeholder="#4a90e2"
+                  style={{
+                    flex: 1,
+                    padding: '8px',
+                    border: '1px solid #ddd',
+                    borderRadius: '4px',
+                    fontFamily: 'monospace'
+                  }}
+                />
+              </div>
+              <p className="form-help">Cor da base, borda e verso do chaveiro. Esta é a cor principal do chaveiro (padrão: azul #4a90e2)</p>
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="textColor">
+                <span className="icon">🎨</span>
+                Cor do Texto
+              </label>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <input
+                  type="color"
+                  id="textColor"
+                  name="textColor"
+                  value={keychainConfig.textColor}
+                  onChange={handleChange}
+                  style={{
+                    width: '60px',
+                    height: '40px',
+                    border: '1px solid #ddd',
+                    borderRadius: '4px',
+                    cursor: 'pointer'
+                  }}
+                />
+                <input
+                  type="text"
+                  value={keychainConfig.textColor}
+                  onChange={(e) => {
+                    if (/^#[0-9A-F]{6}$/i.test(e.target.value)) {
+                      handleChange({ target: { name: 'textColor', value: e.target.value } })
+                    }
+                  }}
+                  placeholder="#ffffff"
+                  style={{
+                    flex: 1,
+                    padding: '8px',
+                    border: '1px solid #ddd',
+                    borderRadius: '4px',
+                    fontFamily: 'monospace'
+                  }}
+                />
+              </div>
+              <p className="form-help">Cor do texto em relevo. Escolha uma cor que contraste bem com a cor da base (padrão: branco #ffffff)</p>
             </div>
           </div>
 
