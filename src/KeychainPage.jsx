@@ -1204,9 +1204,9 @@ ${trianglesXML}        </triangles>
             </ol>
           </div>
         </form>
-          </div>
+        </div>
 
-          <div className="keychain-viewer-column">
+        <div className="keychain-viewer-column">
             <div style={{ marginBottom: '1rem' }}>
               <h2 style={{ fontSize: '1.3rem', margin: 0, marginBottom: '1rem' }}>👁️ Visualização 3D Interativa</h2>
               <button
