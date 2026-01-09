@@ -150,9 +150,13 @@ function App() {
     setPendingAction(null)
   }
 
-  const hasInfo = Object.values(info).some(value => value !== '')
+  // Verifica se há informações realmente preenchidas (ignorando valores padrão)
+  const hasInfo = info.nomeCrianca || info.nomePai || info.nomeMae || 
+                  info.telefonePai || info.telefoneMae || info.endereco ||
+                  (info.tipo === 'pet' && info.tipoPet)
 
-  if (!hasInfo) {
+  // Se estiver na rota raiz sem parâmetros, mostra a página inicial
+  if (!hasInfo && location.pathname === '/') {
     return (
       <div className="app">
         <div className="container">
