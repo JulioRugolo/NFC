@@ -180,20 +180,6 @@ keychain(name, line2, fontSize, thickness, textThickness, keychainHoleSize, keyc
 `
   }
 
-  const copyToClipboard = () => {
-    const code = generateOpenSCAD()
-    navigator.clipboard.writeText(code).then(() => {
-      alert('Código OpenSCAD copiado para a área de transferência!')
-    }).catch(() => {
-      const textArea = document.createElement('textarea')
-      textArea.value = code
-      document.body.appendChild(textArea)
-      textArea.select()
-      document.execCommand('copy')
-      document.body.removeChild(textArea)
-      alert('Código OpenSCAD copiado para a área de transferência!')
-    })
-  }
 
   const geometryToVerticesAndTriangles = (geometry) => {
     const vertices = []
@@ -1028,11 +1014,11 @@ ${trianglesXML}        </triangles>
           </div>
 
           {keychainConfig.show2ndLine && (
-            <div className="form-row">
-              <div className="form-group">
+            <div className="keychain-inputs-grid">
+              <div className="form-group keychain-input-small">
                 <label htmlFor="line2Offset">
                   <span className="icon">↔️</span>
-                  Posição Horizontal da Linha 2
+                  Pos. Horizontal Linha 2
                 </label>
                 <input
                   type="number"
@@ -1043,14 +1029,15 @@ ${trianglesXML}        </triangles>
                   min="-50"
                   max="50"
                   step="1"
+                  className="keychain-number-input"
                 />
-                <p className="form-help">Mova a segunda linha para esquerda (valores negativos) ou direita (valores positivos). 0 = centralizado (padrão: 0)</p>
+                <p className="form-help">Esquerda (-) ou direita (+) (padrão: 0)</p>
               </div>
 
-              <div className="form-group">
+              <div className="form-group keychain-input-small">
                 <label htmlFor="line2VerticalOffset">
                   <span className="icon">↕️</span>
-                  Posição Vertical da Linha 2
+                  Pos. Vertical Linha 2
                 </label>
                 <input
                   type="number"
@@ -1061,8 +1048,9 @@ ${trianglesXML}        </triangles>
                   min="-50"
                   max="50"
                   step="1"
+                  className="keychain-number-input"
                 />
-                <p className="form-help">Mova a segunda linha para cima (valores positivos) ou para baixo (valores negativos). Padrão: -15mm (abaixo da primeira linha)</p>
+                <p className="form-help">Abaixo (-) ou acima (+) (padrão: -15)</p>
               </div>
             </div>
           )}
@@ -1259,9 +1247,6 @@ ${trianglesXML}        </triangles>
             <button type="button" className="btn btn-primary" onClick={generate3MF}>
               📦 Gerar e Baixar Arquivo .3mf
             </button>
-            <button type="button" className="btn btn-copy" onClick={copyToClipboard}>
-              📋 Copiar Código
-            </button>
           </div>
           <div style={{marginTop: '1rem', padding: '1rem', background: '#d1ecf1', border: '1px solid #bee5eb', borderRadius: '4px', fontSize: '0.9rem'}}>
             <strong>💡 Como usar:</strong>
@@ -1274,6 +1259,52 @@ ${trianglesXML}        </triangles>
             </ol>
           </div>
         </form>
+          </div>
+
+          <div className="keychain-viewer-column">
+            <div style={{ marginBottom: '1rem' }}>
+              <h2 style={{ fontSize: '1.3rem', margin: 0, marginBottom: '1rem' }}>👁️ Visualização 3D Interativa</h2>
+              <button
+                type="button"
+                className="btn btn-primary"
+                onClick={generate3DModel}
+                disabled={isGenerating3D || !keychainConfig.name}
+                style={{ width: '100%' }}
+              >
+                {isGenerating3D ? '⏳ Gerando modelo 3D...' : '🎮 Gerar Visualização 3D'}
+              </button>
+            </div>
+            
+            {stlData ? (
+              <div>
+                <Keychain3DViewer 
+                  stlData={stlData} 
+                  baseColor={keychainConfig.baseColor}
+                  textColor={keychainConfig.textColor}
+                />
+                <p style={{ marginTop: '0.5rem', fontSize: '0.9em', color: '#666', textAlign: 'center' }}>
+                  ✅ Modelo 3D gerado pelo OpenSCAD - Arraste para rotacionar e use o scroll para dar zoom!
+                </p>
+              </div>
+            ) : (
+              <div style={{
+                width: '100%',
+                height: '500px',
+                border: '1px solid #ddd',
+                borderRadius: '8px',
+                background: '#f5f5f5',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: '#999'
+              }}>
+                <p>👁️ Visualização 3D aparecerá aqui</p>
+                <p style={{ fontSize: '0.9em', marginTop: '0.5rem' }}>Clique em "Gerar Visualização 3D" para ver o modelo</p>
+              </div>
+            )}
+          </div>
+        </div>
 
         <div style={{ marginTop: '2rem', marginBottom: '1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
           <button onClick={() => navigate('/')} className="back-link">
