@@ -413,15 +413,21 @@ access(distPath).then(() => {
   
   // Rota catch-all para SPA - DEVE vir por último, depois de todas as rotas de API
   // Serve index.html para todas as rotas que não são API
-  app.get('*', (req, res) => {
+  // Usa função middleware ao invés de '*' para compatibilidade
+  app.use((req, res, next) => {
+    // Se for uma rota de API, passa para o próximo middleware
+    if (req.path.startsWith('/api/')) {
+      return next()
+    }
+    // Caso contrário, serve o index.html do frontend
     res.sendFile(join(distPath, 'index.html'))
   })
   console.log('✅ Frontend estático servido de /dist')
 }).catch(() => {
   console.log('⚠️ Pasta dist não encontrada - servindo apenas API')
   
-  // Mesmo sem dist, adiciona rota catch-all para não dar erro 404
-  app.get('*', (req, res) => {
+  // Mesmo sem dist, adiciona middleware catch-all para não dar erro 404
+  app.use((req, res) => {
     if (req.path.startsWith('/api/')) {
       return res.status(404).json({ error: 'Rota de API não encontrada' })
     }
