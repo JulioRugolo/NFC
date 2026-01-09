@@ -167,6 +167,88 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'Servidor funcionando' })
 })
 
+// Rota para gerar visualização 3D (imagem PNG)
+app.post('/api/generate-preview', async (req, res) => {
+  const config = req.body
+  const tempId = randomUUID()
+  const tempDir = tmpdir()
+  const scadFile = join(tempDir, `keychain_preview_${tempId}.scad`)
+  const previewImage = join(tempDir, `keychain_preview_${tempId}.png`)
+
+  try {
+    if (!config.name) {
+      return res.status(400).json({ error: 'Nome é obrigatório' })
+    }
+
+    // 1. Gera o arquivo OpenSCAD
+    const openSCADCode = generateOpenSCAD(config)
+    await writeFile(scadFile, openSCADCode, 'utf8')
+    console.log(`📝 Arquivo OpenSCAD criado para preview: ${scadFile}`)
+
+    // 2. Detecta OpenSCAD
+    const { openscadPath } = await findOpenSCAD()
+
+    // 3. Renderiza imagem PNG usando OpenSCAD
+    // --render: renderiza o modelo completamente
+    // --imgsize: tamanho da imagem (largura,altura)
+    // --viewall: ajusta a câmera para mostrar tudo
+    // -o com extensão .png: exporta como PNG
+    const previewCommand = `"${openscadPath}" --render --imgsize=800,600 --viewall --autocenter "${scadFile}" -o "${previewImage}"`
+    console.log(`🔧 Gerando preview: ${previewCommand}`)
+
+    try {
+      const { stdout, stderr } = await execAsync(previewCommand, { timeout: 30000 })
+      
+      if (stderr && !stderr.includes('WARNING')) {
+        console.warn('OpenSCAD stderr:', stderr)
+      }
+
+      // Verifica se a imagem foi criada
+      const imageContent = await readFile(previewImage)
+      
+      if (imageContent.length === 0) {
+        throw new Error('Imagem de preview gerada está vazia')
+      }
+
+      // Limpa arquivo temporário
+      await unlink(scadFile).catch(() => {})
+
+      // Retorna a imagem como base64 ou como arquivo
+      const base64Image = imageContent.toString('base64')
+      
+      // Limpa a imagem após enviar
+      setTimeout(() => {
+        unlink(previewImage).catch(() => {})
+      }, 5000)
+
+      res.json({
+        success: true,
+        image: `data:image/png;base64,${base64Image}`
+      })
+
+    } catch (previewErr) {
+      console.error('Erro ao gerar preview:', previewErr)
+      
+      // Limpa arquivos temporários
+      await unlink(scadFile).catch(() => {})
+      await unlink(previewImage).catch(() => {})
+      
+      throw new Error(`Erro ao gerar visualização: ${previewErr.message}`)
+    }
+
+  } catch (error) {
+    console.error('Erro ao gerar preview:', error)
+    
+    await unlink(scadFile).catch(() => {})
+    await unlink(previewImage).catch(() => {})
+    
+    res.status(500).json({
+      error: 'Erro ao gerar visualização',
+      message: error.message
+    })
+  }
+})
+
 // Rota para gerar SCAD, abrir no OpenSCAD e exportar 3MF automaticamente
 app.post('/api/generate-and-export-3mf', async (req, res) => {
   const config = req.body

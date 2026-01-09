@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom'
 import './ConfigPage.css'
 import * as THREE from 'three'
 import JSZip from 'jszip'
-import KeychainViewer from './KeychainViewer'
 
 function KeychainPage() {
   const navigate = useNavigate()
@@ -28,6 +27,9 @@ function KeychainPage() {
     font: 'Chewy',
     fontStyle: 'Black Italic'
   })
+
+  const [previewImage, setPreviewImage] = useState(null)
+  const [isGeneratingPreview, setIsGeneratingPreview] = useState(false)
 
   const fonts = [
     'Inter', 'Rubik', 'Open Sans', 'Inter Tight', 'Source Sans 3', 'Noto Emoji',
@@ -248,6 +250,57 @@ keychain(name, line2, fontSize, thickness, textThickness, keychainHoleSize, keyc
     }
     
     return { vertices, triangles }
+  }
+
+  const generatePreview = async () => {
+    try {
+      if (!keychainConfig.name) {
+        alert('Por favor, preencha o nome do chaveiro primeiro!')
+        return
+      }
+
+      setIsGeneratingPreview(true)
+      setPreviewImage(null)
+
+      const API_URL = import.meta.env.VITE_API_URL || 
+        (import.meta.env.PROD ? window.location.origin : 'http://localhost:3001')
+      
+      const response = await fetch(`${API_URL}/api/generate-preview`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(keychainConfig)
+      })
+
+      if (!response.ok) {
+        let errorMessage = 'Erro ao gerar visualização'
+        
+        try {
+          const error = await response.json()
+          errorMessage = error.message || error.error || errorMessage
+        } catch (e) {
+          const text = await response.text()
+          errorMessage = text || errorMessage
+        }
+        
+        throw new Error(errorMessage)
+      }
+
+      const data = await response.json()
+      
+      if (data.success && data.image) {
+        setPreviewImage(data.image)
+      } else {
+        throw new Error('Resposta inválida do servidor')
+      }
+
+    } catch (error) {
+      console.error('Erro ao gerar preview:', error)
+      alert(`Erro ao gerar visualização: ${error.message}\n\nCertifique-se de que o servidor backend está rodando.`)
+    } finally {
+      setIsGeneratingPreview(false)
+    }
   }
 
   const generate3MF = async () => {
@@ -587,15 +640,70 @@ ${trianglesXML}        </triangles>
         </header>
 
         {/* Visualização 3D */}
-        {keychainConfig.name && (
-          <div style={{ marginBottom: '2rem' }}>
-            <h2 style={{ marginBottom: '1rem', fontSize: '1.3rem' }}>👁️ Visualização 3D do Chaveiro</h2>
-            <KeychainViewer config={keychainConfig} />
-            <p style={{ marginTop: '0.5rem', fontSize: '0.9em', color: '#666', textAlign: 'center' }}>
-              Esta é uma visualização aproximada. O modelo final pode ter pequenas diferenças.
-            </p>
+        <div style={{ marginBottom: '2rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+            <h2 style={{ fontSize: '1.3rem', margin: 0 }}>👁️ Visualização 3D do Chaveiro</h2>
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={generatePreview}
+              disabled={isGeneratingPreview || !keychainConfig.name}
+              style={{ minWidth: '200px' }}
+            >
+              {isGeneratingPreview ? '⏳ Gerando...' : '🖼️ Gerar Visualização'}
+            </button>
           </div>
-        )}
+          
+          {previewImage ? (
+            <div style={{
+              width: '100%',
+              border: '1px solid #ddd',
+              borderRadius: '8px',
+              background: '#fff',
+              padding: '1rem',
+              textAlign: 'center'
+            }}>
+              <img
+                src={previewImage}
+                alt="Preview do chaveiro"
+                style={{
+                  maxWidth: '100%',
+                  height: 'auto',
+                  borderRadius: '4px',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                }}
+              />
+              <p style={{ marginTop: '0.5rem', fontSize: '0.9em', color: '#666' }}>
+                ✅ Visualização gerada pelo OpenSCAD - Esta é a renderização real do modelo!
+              </p>
+            </div>
+          ) : (
+            <div style={{
+              width: '100%',
+              height: '400px',
+              border: '1px solid #ddd',
+              borderRadius: '8px',
+              background: '#f5f5f5',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: '#999'
+            }}>
+              {!keychainConfig.name ? (
+                <>
+                  <p style={{ fontSize: '1.1em', marginBottom: '0.5rem' }}>📝 Preencha o nome do chaveiro</p>
+                  <p style={{ fontSize: '0.9em' }}>Depois clique em "Gerar Visualização" para ver como ficará</p>
+                </>
+              ) : (
+                <>
+                  <p style={{ fontSize: '1.1em', marginBottom: '0.5rem' }}>👆 Clique em "Gerar Visualização"</p>
+                  <p style={{ fontSize: '0.9em' }}>O sistema renderizará o modelo 3D usando OpenSCAD</p>
+                </>
+              )}
+            </div>
+          )}
+        </div>
 
         <form className="config-form" onSubmit={(e) => e.preventDefault()}>
           <div className="form-group">
