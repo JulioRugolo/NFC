@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useLocation } from 'react-router-dom'
+import { useLocation, Link } from 'react-router-dom'
 import './App.css'
 import ConfigPage from './ConfigPage'
 import KeychainPage from './KeychainPage'
@@ -156,13 +156,51 @@ function App() {
     return (
       <div className="app">
         <div className="container">
-          <div className="empty-state">
-            <h1>Informações de Contato</h1>
-            <p>Nenhuma informação foi encontrada na URL.</p>
-            <p className="help-text">
-              Use parâmetros na URL como:<br/>
-              ?nomeCrianca=João&nomePai=Carlos&telefonePai=11999999999
-            </p>
+          <div className="home-page">
+            <header className="home-header">
+              <h1 className="home-title">🔖 BOTU3D</h1>
+              <p className="home-subtitle">Sistema de Tags NFC e Chaveiros 3D</p>
+            </header>
+            
+            <div className="home-content">
+              <div className="home-cards">
+                <Link to="/config" className="home-card">
+                  <div className="card-icon">⚙️</div>
+                  <h2 className="card-title">Configurar Tag NFC</h2>
+                  <p className="card-description">
+                    Crie e configure suas tags NFC personalizadas com informações de contato
+                  </p>
+                  <div className="card-arrow">→</div>
+                </Link>
+
+                <Link to="/keychain" className="home-card">
+                  <div className="card-icon">🔑</div>
+                  <h2 className="card-title">Personalizar Chaveiro 3D</h2>
+                  <p className="card-description">
+                    Crie chaveiros 3D personalizados com texto, cores e estilos únicos
+                  </p>
+                  <div className="card-arrow">→</div>
+                </Link>
+
+                <a 
+                  href="/?nomeCrianca=João%20Silva&nomePai=Carlos%20Silva&nomeMae=Maria%20Silva&telefonePai=11999999999&telefoneMae=11888888888&endereco=Rua%20Exemplo,%20123&genero=menino" 
+                  className="home-card card-example"
+                >
+                  <div className="card-icon">👁️</div>
+                  <h2 className="card-title">Ver Exemplo</h2>
+                  <p className="card-description">
+                    Veja como fica uma tag NFC com informações de exemplo
+                  </p>
+                  <div className="card-arrow">→</div>
+                </a>
+              </div>
+            </div>
+
+            <footer className="home-footer">
+              <p className="footer-text">
+                Desenvolvido por <strong>BOTU3D</strong> - Tags NFC e Impressão 3D
+              </p>
+            </footer>
           </div>
         </div>
       </div>
