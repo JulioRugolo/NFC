@@ -1,11 +1,19 @@
 # Dockerfile para Railway com OpenSCAD pré-instalado
 FROM node:18-slim
 
-# Instala dependências do sistema, OpenSCAD e Xvfb (para renderização sem display)
+# Instala dependências do sistema, OpenSCAD, Xvfb e fontconfig
 RUN apt-get update && apt-get install -y \
     openscad \
     xvfb \
+    fontconfig \
+    wget \
+    unzip \
     && rm -rf /var/lib/apt/lists/*
+
+# Instala fonte Chewy do Google Fonts
+RUN mkdir -p /usr/share/fonts/truetype/chewy && \
+    wget -q https://github.com/google/fonts/raw/main/apache/chewy/Chewy-Regular.ttf -O /usr/share/fonts/truetype/chewy/Chewy-Regular.ttf && \
+    fc-cache -fv
 
 # Define o diretório de trabalho
 WORKDIR /app
