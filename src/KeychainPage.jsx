@@ -255,6 +255,59 @@ keychain(name, line2, fontSize, thickness, textThickness, keychainHoleSize, keyc
     return { vertices, triangles }
   }
 
+  const generate3DModel = async () => {
+    try {
+      if (!keychainConfig.name) {
+        alert('Por favor, preencha o nome do chaveiro primeiro!')
+        return
+      }
+
+      setIsGenerating3D(true)
+      setStlData(null)
+
+      const API_URL = import.meta.env.VITE_API_URL || 
+        (import.meta.env.PROD ? window.location.origin : 'http://localhost:3001')
+      
+      const response = await fetch(`${API_URL}/api/generate-3d-model`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(keychainConfig)
+      })
+
+      if (!response.ok) {
+        let errorMessage = 'Erro ao gerar modelo 3D'
+        
+        try {
+          const error = await response.json()
+          errorMessage = error.message || error.error || errorMessage
+        } catch (e) {
+          const text = await response.text()
+          errorMessage = text || errorMessage
+        }
+        
+        throw new Error(errorMessage)
+      }
+
+      const data = await response.json()
+      
+      if (data.success && data.stl) {
+        // Decodifica o STL de base64 para string
+        const stlString = atob(data.stl)
+        setStlData(stlString)
+      } else {
+        throw new Error('Resposta inválida do servidor')
+      }
+
+    } catch (error) {
+      console.error('Erro ao gerar modelo 3D:', error)
+      alert(`Erro ao gerar modelo 3D: ${error.message}\n\nCertifique-se de que o servidor backend está rodando.`)
+    } finally {
+      setIsGenerating3D(false)
+    }
+  }
+
   const generatePreview = async () => {
     try {
       if (!keychainConfig.name) {
