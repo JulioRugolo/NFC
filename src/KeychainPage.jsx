@@ -1293,14 +1293,15 @@ ${trianglesXML}        </triangles>
           </div>
         </form>
 
-        <footer className="config-footer">
+        <div style={{ marginTop: '2rem', marginBottom: '1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
           <button onClick={() => navigate('/')} className="back-link">
             ← Voltar para a página principal
           </button>
           <button onClick={() => navigate('/config')} className="back-link">
             ⚙️ Ir para Configuração NFC
           </button>
-        </footer>
+        </div>
+        <Footer />
       </div>
     </div>
   )
