@@ -731,7 +731,11 @@ ${trianglesXML}        </triangles>
           
           {stlData ? (
             <div>
-              <Keychain3DViewer stlData={stlData} />
+              <Keychain3DViewer 
+                stlData={stlData} 
+                baseColor={keychainConfig.baseColor}
+                textColor={keychainConfig.textColor}
+              />
               <p style={{ marginTop: '0.5rem', fontSize: '0.9em', color: '#666', textAlign: 'center' }}>
                 ✅ Modelo 3D gerado pelo OpenSCAD - Arraste para rotacionar e use o scroll para dar zoom!
               </p>

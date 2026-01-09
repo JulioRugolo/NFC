@@ -48,7 +48,7 @@ function parseSTL(stlString) {
   return { vertices, normals, vertexCount }
 }
 
-export default function Keychain3DViewer({ stlData }) {
+export default function Keychain3DViewer({ stlData, baseColor = '#4a90e2', textColor = '#ffffff' }) {
   const containerRef = useRef(null)
   const sceneRef = useRef(null)
   const rendererRef = useRef(null)
@@ -57,6 +57,11 @@ export default function Keychain3DViewer({ stlData }) {
 
   useEffect(() => {
     if (!stlData || !containerRef.current) return
+
+    // Limpa o container antes de criar novo modelo
+    if (containerRef.current.firstChild) {
+      containerRef.current.innerHTML = ''
+    }
 
     // Cria a cena
     const scene = new THREE.Scene()
@@ -116,8 +121,10 @@ export default function Keychain3DViewer({ stlData }) {
       geometry.boundingBox.getCenter(center)
       geometry.translate(-center.x, -center.y, -center.z)
 
+      // Converte cor hex para número (Three.js usa números hex sem #)
+      const baseColorHex = baseColor.replace('#', '0x')
       const material = new THREE.MeshStandardMaterial({
-        color: 0x4a90e2,
+        color: parseInt(baseColorHex, 16),
         metalness: 0.3,
         roughness: 0.7
       })
@@ -125,6 +132,12 @@ export default function Keychain3DViewer({ stlData }) {
       const mesh = new THREE.Mesh(geometry, material)
       scene.add(mesh)
       meshRef.current = mesh
+
+      // Atualiza a cor quando as props mudarem
+      if (meshRef.current && meshRef.current.material) {
+        const baseColorHex = baseColor.replace('#', '0x')
+        meshRef.current.material.color.setHex(parseInt(baseColorHex, 16))
+      }
 
       // Ajusta a câmera para mostrar todo o modelo
       const box = new THREE.Box3().setFromObject(mesh)
@@ -225,7 +238,7 @@ export default function Keychain3DViewer({ stlData }) {
       }
       renderer.dispose()
     }
-  }, [stlData])
+  }, [stlData, baseColor, textColor])
 
   if (!stlData) {
     return (
