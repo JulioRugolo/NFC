@@ -167,62 +167,206 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'Servidor funcionando' })
 })
 
+// Função para gerar OpenSCAD apenas da base (sem texto)
+function generateBaseOnlySCAD(config) {
+  const { name, line2, show2ndLine, fontSize, keychainHoleSize, keychainHoleOffset, 
+          edgeRadius, line2Offset, line2VerticalOffset, boxWidth, boxHeight, 
+          boxXOffset, boxYOffset, font, fontStyle, thickness } = config
+
+  const baseRgb = hexToRgb(config.baseColor || '#4a90e2')
+  
+  return `// Parameters - Base Only
+$fn = 100;
+name = "${name.replace(/"/g, '\\"')}";
+line2 = "${line2.replace(/"/g, '\\"')}";
+2ndline = ${show2ndLine};
+fontSize = ${fontSize};
+thickness = ${thickness};
+keychainHoleSize = ${keychainHoleSize};
+keychainHoleOffset = ${keychainHoleOffset};
+r = ${edgeRadius};
+line2Offset = ${line2Offset};
+line2VerticalOffset = ${line2VerticalOffset};
+boxWidth = ${boxWidth};
+boxHeight = ${boxHeight};
+boxXOffset = ${boxXOffset};
+boxYOffset = ${boxYOffset};
+
+Font = "${font}";
+FontStyle = "${fontStyle}";
+font = str(Font , ":style=", FontStyle);
+
+// Base only
+translate([0, 0, 0])
+    linear_extrude(height = thickness)
+        offset(r = r)
+            text(name, size = fontSize, valign = "center", halign = "left", font = font);
+
+if (2ndline) {
+    translate([line2Offset, line2VerticalOffset, 0])
+        linear_extrude(height = thickness)
+            offset(r = r)
+                text(line2, size = fontSize, valign = "center", halign = "left", font = font);
+}
+
+if (boxWidth > 0 && boxHeight > 0) {
+    translate([boxXOffset, boxYOffset, 0])
+        linear_extrude(height = thickness)
+            square([boxWidth, boxHeight], center = false);
+}
+
+difference() {
+    union() {
+        translate([-keychainHoleOffset - 3, 0, 0]) {
+            cylinder(h = thickness, d = keychainHoleSize + 3, center = false);
+        }
+        translate([-keychainHoleOffset - 4, -keychainHoleSize / 2 - 1.25, 0]){
+            cube(size = [7 + keychainHoleOffset, keychainHoleSize + 2.5, thickness], center = false);
+        }
+    }
+    translate([-keychainHoleOffset - 3, 0, 0]) {
+        cylinder(h = thickness, d = keychainHoleSize, center = false);
+    }
+}
+`
+}
+
+// Função para gerar OpenSCAD apenas do texto (sem base)
+function generateTextOnlySCAD(config) {
+  const { name, line2, show2ndLine, faceDownMode, fontSize, thickness, textThickness,
+          line2Offset, line2VerticalOffset, font, fontStyle } = config
+
+  return `// Parameters - Text Only
+$fn = 100;
+name = "${name.replace(/"/g, '\\"')}";
+line2 = "${line2.replace(/"/g, '\\"')}";
+2ndline = ${show2ndLine};
+facedownmode = ${faceDownMode};
+fontSize = ${fontSize};
+thickness = ${thickness};
+textThickness = ${textThickness};
+line2Offset = ${line2Offset};
+line2VerticalOffset = ${line2VerticalOffset};
+
+Font = "${font}";
+FontStyle = "${fontStyle}";
+font = str(Font , ":style=", FontStyle);
+
+// Text only
+if (facedownmode){
+    translate([0, 0, thickness])
+        linear_extrude(height = 0.1)
+            text(name, size = fontSize, valign = "center", halign = "left", font = font);
+} else{
+    translate([0, 0, thickness])
+        linear_extrude(height = textThickness)
+            text(name, size = fontSize, valign = "center", halign = "left", font = font);
+}
+
+if (2ndline) {
+    if(facedownmode){
+        translate([line2Offset, line2VerticalOffset, thickness])
+            linear_extrude(height = 0.1)
+                text(line2, size = fontSize, valign = "center", halign = "left", font = font);
+    }else{
+        translate([line2Offset, line2VerticalOffset, thickness])
+            linear_extrude(height = textThickness)
+                text(line2, size = fontSize, valign = "center", halign = "left", font = font);
+    }
+}
+`
+}
+
+// Função auxiliar para converter hex para RGB
+function hexToRgb(hex) {
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
+  return result ? [
+    parseInt(result[1], 16) / 255,
+    parseInt(result[2], 16) / 255,
+    parseInt(result[3], 16) / 255
+  ] : [0.29, 0.56, 0.89] // Azul padrão
+}
+
 // Rota para gerar modelo 3D (STL) para visualização interativa
 app.post('/api/generate-3d-model', async (req, res) => {
   const config = req.body
   const tempId = randomUUID()
   const tempDir = tmpdir()
-  const scadFile = join(tempDir, `keychain_3d_${tempId}.scad`)
-  const stlFile = join(tempDir, `keychain_3d_${tempId}.stl`)
+  const baseScadFile = join(tempDir, `keychain_base_${tempId}.scad`)
+  const textScadFile = join(tempDir, `keychain_text_${tempId}.scad`)
+  const baseStlFile = join(tempDir, `keychain_base_${tempId}.stl`)
+  const textStlFile = join(tempDir, `keychain_text_${tempId}.stl`)
 
   try {
     if (!config.name) {
       return res.status(400).json({ error: 'Nome é obrigatório' })
     }
 
-    // 1. Gera o arquivo OpenSCAD
-    const openSCADCode = generateOpenSCAD(config)
-    await writeFile(scadFile, openSCADCode, 'utf8')
-    console.log(`📝 Arquivo OpenSCAD criado para modelo 3D: ${scadFile}`)
+    // 1. Gera os arquivos OpenSCAD separados (base e texto)
+    const baseSCADCode = generateBaseOnlySCAD(config)
+    const textSCADCode = generateTextOnlySCAD(config)
+    
+    await writeFile(baseScadFile, baseSCADCode, 'utf8')
+    await writeFile(textScadFile, textSCADCode, 'utf8')
+    console.log(`📝 Arquivos OpenSCAD criados: base e texto`)
 
     // 2. Detecta OpenSCAD
     const { openscadPath } = await findOpenSCAD()
 
-    // 3. Gera STL usando OpenSCAD
+    // 3. Gera STLs separados usando OpenSCAD
     const isLinux = process.platform === 'linux'
-    const stlCommand = isLinux
-      ? `xvfb-run -a -s "-screen 0 1024x768x24" "${openscadPath}" -o "${stlFile}" "${scadFile}"`
-      : `"${openscadPath}" -o "${stlFile}" "${scadFile}"`
-    console.log(`🔧 Gerando STL: ${stlCommand}`)
+    const baseStlCommand = isLinux
+      ? `xvfb-run -a -s "-screen 0 1024x768x24" "${openscadPath}" -o "${baseStlFile}" "${baseScadFile}"`
+      : `"${openscadPath}" -o "${baseStlFile}" "${baseScadFile}"`
+    
+    const textStlCommand = isLinux
+      ? `xvfb-run -a -s "-screen 0 1024x768x24" "${openscadPath}" -o "${textStlFile}" "${textScadFile}"`
+      : `"${openscadPath}" -o "${textStlFile}" "${textScadFile}"`
+    
+    console.log(`🔧 Gerando STLs: base e texto`)
 
     try {
-      const { stdout, stderr } = await execAsync(stlCommand, { timeout: 60000 })
-      
-      if (stderr && !stderr.includes('WARNING')) {
-        console.warn('OpenSCAD stderr:', stderr)
+      // Gera STL da base
+      const { stdout: baseStdout, stderr: baseStderr } = await execAsync(baseStlCommand, { timeout: 60000 })
+      if (baseStderr && !baseStderr.includes('WARNING')) {
+        console.warn('OpenSCAD stderr (base):', baseStderr)
       }
 
-      // Verifica se o arquivo foi criado
-      const stlContent = await readFile(stlFile)
-      
-      if (stlContent.length === 0) {
-        throw new Error('Arquivo STL gerado está vazio')
+      // Gera STL do texto
+      const { stdout: textStdout, stderr: textStderr } = await execAsync(textStlCommand, { timeout: 60000 })
+      if (textStderr && !textStderr.includes('WARNING')) {
+        console.warn('OpenSCAD stderr (text):', textStderr)
       }
 
-      // Limpa arquivo temporário
-      await unlink(scadFile).catch(() => {})
-
-      // Retorna o STL como base64
-      const base64STL = stlContent.toString('base64')
+      // Verifica se os arquivos foram criados
+      const baseStlContent = await readFile(baseStlFile)
+      const textStlContent = await readFile(textStlFile)
       
-      // Limpa o STL após enviar
+      if (baseStlContent.length === 0) {
+        throw new Error('Arquivo STL da base gerado está vazio')
+      }
+      if (textStlContent.length === 0) {
+        throw new Error('Arquivo STL do texto gerado está vazio')
+      }
+
+      // Limpa arquivos temporários
+      await unlink(baseScadFile).catch(() => {})
+      await unlink(textScadFile).catch(() => {})
+
+      // Retorna os STLs como base64
+      const base64BaseSTL = baseStlContent.toString('base64')
+      const base64TextSTL = textStlContent.toString('base64')
+      
+      // Limpa os STLs após enviar
       setTimeout(() => {
-        unlink(stlFile).catch(() => {})
+        unlink(baseStlFile).catch(() => {})
+        unlink(textStlFile).catch(() => {})
       }, 5000)
 
       res.json({
         success: true,
-        stl: base64STL,
+        baseStl: base64BaseSTL,
+        textStl: base64TextSTL,
         filename: `keychain_${config.name.replace(/\s+/g, '_')}.stl`
       })
 
@@ -230,8 +374,10 @@ app.post('/api/generate-3d-model', async (req, res) => {
       console.error('Erro ao gerar STL:', stlErr)
       
       // Limpa arquivos temporários
-      await unlink(scadFile).catch(() => {})
-      await unlink(stlFile).catch(() => {})
+      await unlink(baseScadFile).catch(() => {})
+      await unlink(textScadFile).catch(() => {})
+      await unlink(baseStlFile).catch(() => {})
+      await unlink(textStlFile).catch(() => {})
       
       throw new Error(`Erro ao gerar modelo 3D: ${stlErr.message}`)
     }
@@ -239,8 +385,10 @@ app.post('/api/generate-3d-model', async (req, res) => {
   } catch (error) {
     console.error('Erro ao gerar modelo 3D:', error)
     
-    await unlink(scadFile).catch(() => {})
-    await unlink(stlFile).catch(() => {})
+    await unlink(baseScadFile).catch(() => {})
+    await unlink(textScadFile).catch(() => {})
+    await unlink(baseStlFile).catch(() => {})
+    await unlink(textStlFile).catch(() => {})
     
     res.status(500).json({
       error: 'Erro ao gerar modelo 3D',

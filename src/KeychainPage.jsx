@@ -311,10 +311,11 @@ keychain(name, line2, fontSize, thickness, textThickness, keychainHoleSize, keyc
 
       const data = await response.json()
       
-      if (data.success && data.stl) {
-        // Decodifica o STL de base64 para string
-        const stlString = atob(data.stl)
-        setStlData(stlString)
+      if (data.success && data.baseStl && data.textStl) {
+        // Decodifica os STLs de base64 para string
+        const baseStlString = atob(data.baseStl)
+        const textStlString = atob(data.textStl)
+        setStlData({ base: baseStlString, text: textStlString })
       } else {
         throw new Error('Resposta inválida do servidor')
       }

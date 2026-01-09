@@ -53,10 +53,12 @@ export default function Keychain3DViewer({ stlData, baseColor = '#4a90e2', textC
   const sceneRef = useRef(null)
   const rendererRef = useRef(null)
   const cameraRef = useRef(null)
-  const meshRef = useRef(null)
+  const baseMeshRef = useRef(null)
+  const textMeshRef = useRef(null)
 
   useEffect(() => {
     if (!stlData || !containerRef.current) return
+    if (typeof stlData !== 'object' || !stlData.base || !stlData.text) return
 
     // Limpa o container antes de criar novo modelo
     if (containerRef.current.firstChild) {
@@ -98,49 +100,79 @@ export default function Keychain3DViewer({ stlData, baseColor = '#4a90e2', textC
     directionalLight2.position.set(-10, -10, -5)
     scene.add(directionalLight2)
 
-    // Carrega o modelo STL
+    // Carrega os modelos STL (base e texto separados)
     try {
-      const { vertices, normals } = parseSTL(stlData)
-      
-      if (vertices.length === 0) {
-        throw new Error('STL vazio ou formato inválido')
+      // Carrega STL da base
+      const baseData = parseSTL(stlData.base)
+      if (baseData.vertices.length === 0) {
+        throw new Error('STL da base vazio ou formato inválido')
       }
 
-      const geometry = new THREE.BufferGeometry()
-      geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3))
+      const baseGeometry = new THREE.BufferGeometry()
+      baseGeometry.setAttribute('position', new THREE.Float32BufferAttribute(baseData.vertices, 3))
       
-      if (normals.length > 0) {
-        geometry.setAttribute('normal', new THREE.Float32BufferAttribute(normals, 3))
+      if (baseData.normals.length > 0) {
+        baseGeometry.setAttribute('normal', new THREE.Float32BufferAttribute(baseData.normals, 3))
       } else {
-        geometry.computeVertexNormals()
+        baseGeometry.computeVertexNormals()
       }
 
-      // Calcula o centro do modelo
-      geometry.computeBoundingBox()
-      const center = new THREE.Vector3()
-      geometry.boundingBox.getCenter(center)
-      geometry.translate(-center.x, -center.y, -center.z)
+      // Carrega STL do texto
+      const textData = parseSTL(stlData.text)
+      if (textData.vertices.length === 0) {
+        throw new Error('STL do texto vazio ou formato inválido')
+      }
 
-      // Converte cor hex para número (Three.js usa números hex sem #)
+      const textGeometry = new THREE.BufferGeometry()
+      textGeometry.setAttribute('position', new THREE.Float32BufferAttribute(textData.vertices, 3))
+      
+      if (textData.normals.length > 0) {
+        textGeometry.setAttribute('normal', new THREE.Float32BufferAttribute(textData.normals, 3))
+      } else {
+        textGeometry.computeVertexNormals()
+      }
+
+      // Calcula o centro combinado de ambos os modelos
+      const combinedBox = new THREE.Box3()
+      baseGeometry.computeBoundingBox()
+      textGeometry.computeBoundingBox()
+      combinedBox.union(baseGeometry.boundingBox)
+      combinedBox.union(textGeometry.boundingBox)
+      
+      const center = new THREE.Vector3()
+      combinedBox.getCenter(center)
+      
+      baseGeometry.translate(-center.x, -center.y, -center.z)
+      textGeometry.translate(-center.x, -center.y, -center.z)
+
+      // Material da base
       const baseColorHex = baseColor.replace('#', '0x')
-      const material = new THREE.MeshStandardMaterial({
+      const baseMaterial = new THREE.MeshStandardMaterial({
         color: parseInt(baseColorHex, 16),
         metalness: 0.3,
         roughness: 0.7
       })
 
-      const mesh = new THREE.Mesh(geometry, material)
-      scene.add(mesh)
-      meshRef.current = mesh
+      // Material do texto
+      const textColorHex = textColor.replace('#', '0x')
+      const textMaterial = new THREE.MeshStandardMaterial({
+        color: parseInt(textColorHex, 16),
+        metalness: 0.3,
+        roughness: 0.7
+      })
 
-      // Atualiza a cor quando as props mudarem
-      if (meshRef.current && meshRef.current.material) {
-        const baseColorHex = baseColor.replace('#', '0x')
-        meshRef.current.material.color.setHex(parseInt(baseColorHex, 16))
-      }
+      // Cria os meshes
+      const baseMesh = new THREE.Mesh(baseGeometry, baseMaterial)
+      const textMesh = new THREE.Mesh(textGeometry, textMaterial)
+      
+      scene.add(baseMesh)
+      scene.add(textMesh)
+      
+      baseMeshRef.current = baseMesh
+      textMeshRef.current = textMesh
 
       // Ajusta a câmera para mostrar todo o modelo
-      const box = new THREE.Box3().setFromObject(mesh)
+      const box = new THREE.Box3().setFromObject(baseMesh).union(new THREE.Box3().setFromObject(textMesh))
       const size = box.getSize(new THREE.Vector3())
       const maxDim = Math.max(size.x, size.y, size.z)
       const fov = camera.fov * (Math.PI / 180)
@@ -171,7 +203,7 @@ export default function Keychain3DViewer({ stlData, baseColor = '#4a90e2', textC
     }
 
     const onMouseMove = (e) => {
-      if (!isDragging || !meshRef.current) return
+      if (!isDragging || (!baseMeshRef.current && !textMeshRef.current)) return
 
       const deltaMove = {
         x: e.clientX - previousMousePosition.x,
@@ -181,8 +213,14 @@ export default function Keychain3DViewer({ stlData, baseColor = '#4a90e2', textC
       rotationY += deltaMove.x * 0.01
       rotationX += deltaMove.y * 0.01
 
-      meshRef.current.rotation.y = rotationY
-      meshRef.current.rotation.x = rotationX
+      if (baseMeshRef.current) {
+        baseMeshRef.current.rotation.y = rotationY
+        baseMeshRef.current.rotation.x = rotationX
+      }
+      if (textMeshRef.current) {
+        textMeshRef.current.rotation.y = rotationY
+        textMeshRef.current.rotation.x = rotationX
+      }
 
       previousMousePosition = {
         x: e.clientX,
@@ -240,7 +278,19 @@ export default function Keychain3DViewer({ stlData, baseColor = '#4a90e2', textC
     }
   }, [stlData, baseColor, textColor])
 
-  if (!stlData) {
+  // Atualiza cores quando mudarem (sem recriar o modelo)
+  useEffect(() => {
+    if (baseMeshRef.current && baseMeshRef.current.material) {
+      const baseColorHex = baseColor.replace('#', '0x')
+      baseMeshRef.current.material.color.setHex(parseInt(baseColorHex, 16))
+    }
+    if (textMeshRef.current && textMeshRef.current.material) {
+      const textColorHex = textColor.replace('#', '0x')
+      textMeshRef.current.material.color.setHex(parseInt(textColorHex, 16))
+    }
+  }, [baseColor, textColor])
+
+  if (!stlData || typeof stlData !== 'object' || !stlData.base || !stlData.text) {
     return (
       <div style={{
         width: '100%',
