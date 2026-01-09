@@ -429,23 +429,29 @@ keychain(name, line2, fontSize, thickness, textThickness, keychainHoleSize, keyc
         return
       }
 
+      // Mostra modal de progresso
+      setProgress(0)
+      setProgressMessage('Iniciando geração do arquivo 3MF...')
+      setShowProgressModal(true)
+
       // Chama o backend para gerar SCAD, abrir no OpenSCAD e exportar 3MF
       // Em produção, usa a mesma URL do frontend (Railway)
       const API_URL = import.meta.env.VITE_API_URL || 
         (import.meta.env.PROD ? window.location.origin : 'http://localhost:3001')
       
-      // Mostra mensagem informativa
-      const userConfirmed = confirm(
-        'O sistema irá:\n' +
-        '1. Gerar o arquivo .scad\n' +
-        '2. Abrir no OpenSCAD\n' +
-        '3. Renderizar e exportar como 3MF automaticamente\n\n' +
-        'O OpenSCAD será aberto e o arquivo 3MF será baixado em alguns segundos.\n\n' +
-        'Continuar?'
-      )
-      
-      if (!userConfirmed) return
-      
+      // Simula progresso enquanto aguarda resposta
+      const progressInterval = setInterval(() => {
+        setProgress(prev => {
+          if (prev < 90) {
+            return prev + 2
+          }
+          return prev
+        })
+      }, 500)
+
+      setProgress(10)
+      setProgressMessage('Gerando código OpenSCAD...')
+
       const response = await fetch(`${API_URL}/api/generate-and-export-3mf`, {
         method: 'POST',
         headers: {
@@ -454,10 +460,14 @@ keychain(name, line2, fontSize, thickness, textThickness, keychainHoleSize, keyc
         body: JSON.stringify(keychainConfig)
       })
 
+      setProgress(40)
+      setProgressMessage('Renderizando modelo 3D...')
+
       // Verifica o tipo de conteúdo da resposta
       const contentType = response.headers.get('content-type') || ''
       
       if (!response.ok) {
+        clearInterval(progressInterval)
         let errorMessage = 'Erro ao gerar arquivo 3MF'
         let errorHint = ''
         
@@ -472,11 +482,19 @@ keychain(name, line2, fontSize, thickness, textThickness, keychainHoleSize, keyc
           errorMessage = errorText || errorMessage
         }
         
+        setShowProgressModal(false)
         throw new Error(errorMessage + (errorHint ? `\n\n${errorHint}` : ''))
       }
 
+      setProgress(70)
+      setProgressMessage('Exportando para formato 3MF...')
+
       // Se chegou aqui, a resposta está OK - baixa o arquivo
       const blob = await response.blob()
+      
+      setProgress(90)
+      setProgressMessage('Preparando download...')
+
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
@@ -486,10 +504,20 @@ keychain(name, line2, fontSize, thickness, textThickness, keychainHoleSize, keyc
       document.body.removeChild(a)
       URL.revokeObjectURL(url)
       
-      alert('✅ Arquivo 3MF gerado com sucesso!\n\nO OpenSCAD foi aberto com o modelo. O arquivo 3MF foi baixado automaticamente.')
-      return
+      clearInterval(progressInterval)
+      setProgress(100)
+      setProgressMessage('Arquivo 3MF gerado com sucesso!')
+      
+      // Fecha o modal após 1 segundo
+      setTimeout(() => {
+        setShowProgressModal(false)
+        setProgress(0)
+        setProgressMessage('')
+      }, 1000)
+      
     } catch (error) {
       console.error('Erro ao gerar 3MF:', error)
+      setShowProgressModal(false)
       
       // Se o backend não estiver disponível, mostra mensagem
       if (error.message.includes('fetch') || error.message.includes('Failed to fetch')) {

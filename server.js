@@ -21,6 +21,9 @@ function generateOpenSCAD(config) {
           keychainHoleSize, keychainHoleOffset, edgeRadius, line2Offset, line2VerticalOffset,
           boxWidth, boxHeight, boxXOffset, boxYOffset, font, fontStyle } = config
 
+  const baseRgb = hexToRgb(config.baseColor || '#4a90e2')
+  const textRgb = hexToRgb(config.textColor || '#ffffff')
+
   return `// Parameters
 $fn = 100;
 name = "${name.replace(/"/g, '\\"')}"; // Change this to the desired name
@@ -48,16 +51,20 @@ Font = "${font}"; // [Inter, Rubik, Open Sans, Inter Tight, Source Sans 3, Noto 
 FontStyle = "${fontStyle}"; // [Black Italic, Thin, Bold, Medium, Thin Italic, Regular, Medium Italic, Bold Italic, ExtraBold Italic, ExtraBold, Light Italic, SemiBold Italic, Light, ExtraLight Italic, ExtraLight, SemiBold, Black, Italic]
 font = str(Font , ":style=", FontStyle);
 
-module keychain(name, line2, fontSize, thickness, textThickness, keychainHoleSize, keychainHoleOffset, font, 2ndline, line2Offset, line2VerticalOffset, boxWidth, boxHeight, boxXOffset, boxYOffset) {
+// Colors (RGB 0-1)
+baseColor = [${baseRgb[0]}, ${baseRgb[1]}, ${baseRgb[2]}];
+textColor = [${textRgb[0]}, ${textRgb[1]}, ${textRgb[2]}];
+
+module keychain(name, line2, fontSize, thickness, textThickness, keychainHoleSize, keychainHoleOffset, font, 2ndline, line2Offset, line2VerticalOffset, boxWidth, boxHeight, boxXOffset, boxYOffset, baseColor, textColor) {
     // Create the background "bubble" for the first line
-    translate([0, 0, 0])
+    color(baseColor) translate([0, 0, 0])
         linear_extrude(height = thickness)
             offset(r = r)
                 text(name, size = fontSize, valign = "center", halign = "left", font = font);
 
     // Create the background "bubble" for the second line if 2ndline is true
     if (2ndline) {
-        translate([line2Offset, line2VerticalOffset, 0])
+        color(baseColor) translate([line2Offset, line2VerticalOffset, 0])
             linear_extrude(height = thickness)
                 offset(r = r)
                     text(line2, size = fontSize, valign = "center", halign = "left", font = font);
@@ -65,12 +72,12 @@ module keychain(name, line2, fontSize, thickness, textThickness, keychainHoleSiz
 
     // Extrude the text for the first line
     if (facedownmode){
-          translate([0, 0, thickness])
-        color([0,0,0])linear_extrude(height = 0.1)
+          color(textColor) translate([0, 0, thickness])
+        linear_extrude(height = 0.1)
             text(name, size = fontSize, valign = "center", halign = "left", font = font);  
     } else{
-           translate([0, 0, thickness])
-        color([0,0,0])linear_extrude(height = textThickness)
+           color(textColor) translate([0, 0, thickness])
+        linear_extrude(height = textThickness)
             text(name, size = fontSize, valign = "center", halign = "left", font = font);
     }
 
@@ -78,24 +85,24 @@ module keychain(name, line2, fontSize, thickness, textThickness, keychainHoleSiz
     if (2ndline) {
         
         if(facedownmode){
-            color([0,0,0])translate([line2Offset, line2VerticalOffset, thickness])
+            color(textColor) translate([line2Offset, line2VerticalOffset, thickness])
             linear_extrude(height = 0.1)
                 text(line2, size = fontSize, valign = "center", halign = "left", font = font);
         }else{
-            color([0,0,0])translate([line2Offset, line2VerticalOffset, thickness])
+            color(textColor) translate([line2Offset, line2VerticalOffset, thickness])
             linear_extrude(height = textThickness)
                 text(line2, size = fontSize, valign = "center", halign = "left", font = font);
         }
     }
     
     // Add the customizable box
-    translate([boxXOffset, boxYOffset, 0])
+    color(baseColor) translate([boxXOffset, boxYOffset, 0])
         linear_extrude(height = thickness)
             square([boxWidth, boxHeight], center = false);
 
     difference() {
         // Add the keychain hole
-        union() {
+        color(baseColor) union() {
             translate([-keychainHoleOffset - 3, 0, 0]) {
                 cylinder(h = thickness, d = keychainHoleSize + 3, center = false);
             }
@@ -110,7 +117,7 @@ module keychain(name, line2, fontSize, thickness, textThickness, keychainHoleSiz
 }
 
 // Main call
-keychain(name, line2, fontSize, thickness, textThickness, keychainHoleSize, keychainHoleOffset, font, 2ndline, line2Offset, line2VerticalOffset, boxWidth, boxHeight, boxXOffset, boxYOffset);
+keychain(name, line2, fontSize, thickness, textThickness, keychainHoleSize, keychainHoleOffset, font, 2ndline, line2Offset, line2VerticalOffset, boxWidth, boxHeight, boxXOffset, boxYOffset, baseColor, textColor);
 `
 }
 
