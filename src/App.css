@@ -470,8 +470,9 @@ footer {
     margin-top: 8px;
   }
 
-  footer {
-    padding: 12px 10px;
+  footer,
+  .app-footer {
+    padding: 0.75rem 0.75rem !important;
   }
 
   .brand-section {
