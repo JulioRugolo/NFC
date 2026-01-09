@@ -1124,9 +1124,9 @@ ${trianglesXML}        </triangles>
               Caixa/Retângulo Adicional (Opcional - Avançado)
             </label>
             <p className="form-help" style={{marginBottom: '1rem'}}>Adicione um retângulo extra ao chaveiro (útil para logos ou decorações). Deixe tudo em 0 para não adicionar nada.</p>
-            <div className="form-row">
-              <div className="form-group">
-                <label htmlFor="boxWidth">Largura da Caixa</label>
+            <div className="keychain-inputs-grid">
+              <div className="form-group keychain-input-small">
+                <label htmlFor="boxWidth">Largura Caixa</label>
                 <input
                   type="number"
                   id="boxWidth"
@@ -1136,11 +1136,12 @@ ${trianglesXML}        </triangles>
                   min="0"
                   max="100"
                   step="1"
+                  className="keychain-number-input"
                 />
                 <p className="form-help" style={{fontSize: '0.8em'}}>Largura em mm</p>
               </div>
-              <div className="form-group">
-                <label htmlFor="boxHeight">Altura da Caixa</label>
+              <div className="form-group keychain-input-small">
+                <label htmlFor="boxHeight">Altura Caixa</label>
                 <input
                   type="number"
                   id="boxHeight"
@@ -1150,11 +1151,12 @@ ${trianglesXML}        </triangles>
                   min="0"
                   max="100"
                   step="1"
+                  className="keychain-number-input"
                 />
                 <p className="form-help" style={{fontSize: '0.8em'}}>Altura em mm</p>
               </div>
-              <div className="form-group">
-                <label htmlFor="boxXOffset">Posição Horizontal</label>
+              <div className="form-group keychain-input-small">
+                <label htmlFor="boxXOffset">Pos. Horizontal</label>
                 <input
                   type="number"
                   id="boxXOffset"
@@ -1164,11 +1166,12 @@ ${trianglesXML}        </triangles>
                   min="-100"
                   max="100"
                   step="1"
+                  className="keychain-number-input"
                 />
                 <p className="form-help" style={{fontSize: '0.8em'}}>Esquerda (-) ou direita (+)</p>
               </div>
-              <div className="form-group">
-                <label htmlFor="boxYOffset">Posição Vertical</label>
+              <div className="form-group keychain-input-small">
+                <label htmlFor="boxYOffset">Pos. Vertical</label>
                 <input
                   type="number"
                   id="boxYOffset"
@@ -1178,6 +1181,7 @@ ${trianglesXML}        </triangles>
                   min="-100"
                   max="100"
                   step="1"
+                  className="keychain-number-input"
                 />
                 <p className="form-help" style={{fontSize: '0.8em'}}>Abaixo (-) ou acima (+)</p>
               </div>
