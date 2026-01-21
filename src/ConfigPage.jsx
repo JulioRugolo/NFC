@@ -6,7 +6,7 @@ import Footer from './Footer'
 function ConfigPage() {
   const navigate = useNavigate()
   const [formData, setFormData] = useState({
-    tipo: 'crianca', // 'crianca' ou 'pet'
+    tipo: 'crianca', // 'crianca', 'pet' ou 'empresa'
     nomeCrianca: '',
     tipoPet: '', // 'gato' ou 'cachorro' (apenas se tipo for 'pet')
     genero: 'menina', // 'menino' ou 'menina'
@@ -16,7 +16,15 @@ function ConfigPage() {
     instagramPai: '',
     instagramMae: '',
     telefonePai: '',
-    telefoneMae: ''
+    telefoneMae: '',
+    // Campos para empresa
+    nomeEmpresa: '',
+    logoEmpresa: '', // URL da imagem do logo
+    telefoneEmpresa: '',
+    enderecoEmpresa: '',
+    instagramEmpresa: '',
+    facebookEmpresa: '',
+    siteEmpresa: ''
   })
 
   const [generatedUrl, setGeneratedUrl] = useState('')
@@ -99,10 +107,38 @@ function ConfigPage() {
         [name]: processedValue
       }
       
-      // Se mudou o tipo de criança para pet ou vice-versa, limpa campos específicos
+      // Se mudou o tipo, limpa campos específicos
       if (name === 'tipo') {
         if (value === 'crianca') {
           newData.tipoPet = ''
+          // Limpa campos de empresa
+          newData.nomeEmpresa = ''
+          newData.logoEmpresa = ''
+          newData.telefoneEmpresa = ''
+          newData.enderecoEmpresa = ''
+          newData.instagramEmpresa = ''
+          newData.facebookEmpresa = ''
+          newData.siteEmpresa = ''
+        } else if (value === 'pet') {
+          // Limpa campos de empresa
+          newData.nomeEmpresa = ''
+          newData.logoEmpresa = ''
+          newData.telefoneEmpresa = ''
+          newData.enderecoEmpresa = ''
+          newData.instagramEmpresa = ''
+          newData.facebookEmpresa = ''
+          newData.siteEmpresa = ''
+        } else if (value === 'empresa') {
+          // Limpa campos de criança/pet
+          newData.nomeCrianca = ''
+          newData.tipoPet = ''
+          newData.genero = 'menina'
+          newData.nomePai = ''
+          newData.nomeMae = ''
+          newData.instagramPai = ''
+          newData.instagramMae = ''
+          newData.telefonePai = ''
+          newData.telefoneMae = ''
         }
       }
       
@@ -121,8 +157,23 @@ function ConfigPage() {
         return
       }
       
+      // Não inclui campos de empresa se tipo não for 'empresa'
+      if (formData.tipo !== 'empresa' && (key === 'nomeEmpresa' || key === 'logoEmpresa' || 
+          key === 'telefoneEmpresa' || key === 'enderecoEmpresa' || key === 'instagramEmpresa' || 
+          key === 'facebookEmpresa' || key === 'siteEmpresa')) {
+        return
+      }
+      
+      // Não inclui campos de criança/pet se tipo for 'empresa'
+      if (formData.tipo === 'empresa' && (key === 'nomeCrianca' || key === 'tipoPet' || 
+          key === 'genero' || key === 'nomePai' || key === 'nomeMae' || 
+          key === 'instagramPai' || key === 'instagramMae' || 
+          key === 'telefonePai' || key === 'telefoneMae')) {
+        return
+      }
+      
       // Para telefones, remove formatação e salva apenas números
-      if (key === 'telefonePai' || key === 'telefoneMae') {
+      if (key === 'telefonePai' || key === 'telefoneMae' || key === 'telefoneEmpresa') {
         value = value.replace(/\D/g, '')
         // Garante que tenha o 0 no início se não tiver (e não já começar com 0)
         if (!value.startsWith('0') && (value.length === 10 || value.length === 11)) {
@@ -177,7 +228,14 @@ function ConfigPage() {
       instagramPai: '',
       instagramMae: '',
       telefonePai: '',
-      telefoneMae: ''
+      telefoneMae: '',
+      nomeEmpresa: '',
+      logoEmpresa: '',
+      telefoneEmpresa: '',
+      enderecoEmpresa: '',
+      instagramEmpresa: '',
+      facebookEmpresa: '',
+      siteEmpresa: ''
     })
   }
 
@@ -220,178 +278,306 @@ function ConfigPage() {
                 />
                 <span>Pet 🐾</span>
               </label>
-            </div>
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="nomeCrianca">
-              <span className="icon">{formData.tipo === 'pet' ? '🐾' : '👶'}</span>
-              {formData.tipo === 'pet' ? 'Nome do Pet' : 'Nome da Criança'}
-            </label>
-            <input
-              type="text"
-              id="nomeCrianca"
-              name="nomeCrianca"
-              value={formData.nomeCrianca}
-              onChange={handleChange}
-              placeholder={formData.tipo === 'pet' ? 'Ex: Rex' : 'Ex: Anna Julia Rugolo'}
-            />
-          </div>
-
-          {formData.tipo === 'pet' && (
-            <div className="form-group">
-              <label>
-                <span className="icon">🐱</span>
-                Tipo de Pet
+              <label className="radio-label">
+                <input
+                  type="radio"
+                  name="tipo"
+                  value="empresa"
+                  checked={formData.tipo === 'empresa'}
+                  onChange={handleChange}
+                />
+                <span>Empresa 🏢</span>
               </label>
-              <div className="radio-group">
-                <label className="radio-label">
-                  <input
-                    type="radio"
-                    name="tipoPet"
-                    value="cachorro"
-                    checked={formData.tipoPet === 'cachorro'}
-                    onChange={handleChange}
-                  />
-                  <span>Cachorro 🐶</span>
-                </label>
-                <label className="radio-label">
-                  <input
-                    type="radio"
-                    name="tipoPet"
-                    value="gato"
-                    checked={formData.tipoPet === 'gato'}
-                    onChange={handleChange}
-                  />
-                  <span>Gato 🐱</span>
-                </label>
-              </div>
             </div>
+          </div>
+
+          {/* Campos de Criança/Pet - Ocultos quando tipo for 'empresa' */}
+          {formData.tipo !== 'empresa' && (
+            <>
+              <div className="form-group">
+                <label htmlFor="nomeCrianca">
+                  <span className="icon">{formData.tipo === 'pet' ? '🐾' : '👶'}</span>
+                  {formData.tipo === 'pet' ? 'Nome do Pet' : 'Nome da Criança'}
+                </label>
+                <input
+                  type="text"
+                  id="nomeCrianca"
+                  name="nomeCrianca"
+                  value={formData.nomeCrianca}
+                  onChange={handleChange}
+                  placeholder={formData.tipo === 'pet' ? 'Ex: Rex' : 'Ex: Anna Julia Rugolo'}
+                />
+              </div>
+
+              {formData.tipo === 'pet' && (
+                <div className="form-group">
+                  <label>
+                    <span className="icon">🐱</span>
+                    Tipo de Pet
+                  </label>
+                  <div className="radio-group">
+                    <label className="radio-label">
+                      <input
+                        type="radio"
+                        name="tipoPet"
+                        value="cachorro"
+                        checked={formData.tipoPet === 'cachorro'}
+                        onChange={handleChange}
+                      />
+                      <span>Cachorro 🐶</span>
+                    </label>
+                    <label className="radio-label">
+                      <input
+                        type="radio"
+                        name="tipoPet"
+                        value="gato"
+                        checked={formData.tipoPet === 'gato'}
+                        onChange={handleChange}
+                      />
+                      <span>Gato 🐱</span>
+                    </label>
+                  </div>
+                </div>
+              )}
+
+              <div className="form-group">
+                <label className="checkbox-label">
+                  <input
+                    type="checkbox"
+                    name="genero"
+                    checked={formData.genero === 'menino'}
+                    onChange={handleChange}
+                  />
+                  <span className="checkbox-text">{formData.tipo === 'pet' ? 'É macho' : 'É menino'}</span>
+                </label>
+                <p className="form-help">{formData.tipo === 'pet' ? 'Se não marcar, será considerado fêmea' : 'Se não marcar, será considerado menina'}</p>
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="endereco">
+                  <span className="icon">📍</span>
+                  Endereço (opcional)
+                </label>
+                <input
+                  type="text"
+                  id="endereco"
+                  name="endereco"
+                  value={formData.endereco}
+                  onChange={handleChange}
+                  placeholder="Ex: Rua Exemplo, 123 - Bairro - Cidade/SP"
+                />
+              </div>
+
+              <div className="form-row">
+                <div className="form-group">
+                  <label htmlFor="nomePai">
+                    <span className="icon">{formData.tipo === 'pet' ? '👤' : '👨'}</span>
+                    {formData.tipo === 'pet' ? 'Nome do Tutor' : 'Nome do Pai'}
+                  </label>
+                  <input
+                    type="text"
+                    id="nomePai"
+                    name="nomePai"
+                    value={formData.nomePai}
+                    onChange={handleChange}
+                    placeholder="Ex: Julio Rugolo"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="telefonePai">
+                    <span className="icon">📞</span>
+                    {formData.tipo === 'pet' ? 'Telefone do Tutor' : 'Telefone do Pai'}
+                  </label>
+                  <input
+                    type="text"
+                    id="telefonePai"
+                    name="telefonePai"
+                    value={formData.telefonePai}
+                    onChange={handleChange}
+                    placeholder="(014) 99164-7966"
+                  />
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="instagramPai">
+                  <span className="icon">📷</span>
+                  {formData.tipo === 'pet' ? 'Instagram do Tutor (opcional)' : 'Instagram do Pai (opcional)'}
+                </label>
+                <input
+                  type="text"
+                  id="instagramPai"
+                  name="instagramPai"
+                  value={formData.instagramPai}
+                  onChange={handleChange}
+                  placeholder="Ex: juliorugolo"
+                />
+                <p className="form-help">Não precisa incluir o @</p>
+              </div>
+
+              <div className="form-row">
+                <div className="form-group">
+                  <label htmlFor="nomeMae">
+                    <span className="icon">{formData.tipo === 'pet' ? '👤' : '👩'}</span>
+                    {formData.tipo === 'pet' ? 'Nome da Tutora' : 'Nome da Mãe'}
+                  </label>
+                  <input
+                    type="text"
+                    id="nomeMae"
+                    name="nomeMae"
+                    value={formData.nomeMae}
+                    onChange={handleChange}
+                    placeholder="Ex: Mirela Rugolo"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="telefoneMae">
+                    <span className="icon">📞</span>
+                    {formData.tipo === 'pet' ? 'Telefone da Tutora' : 'Telefone da Mãe'}
+                  </label>
+                  <input
+                    type="text"
+                    id="telefoneMae"
+                    name="telefoneMae"
+                    value={formData.telefoneMae}
+                    onChange={handleChange}
+                    placeholder="(014) 99129-7163"
+                  />
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="instagramMae">
+                  <span className="icon">📷</span>
+                  {formData.tipo === 'pet' ? 'Instagram da Tutora (opcional)' : 'Instagram da Mãe (opcional)'}
+                </label>
+                <input
+                  type="text"
+                  id="instagramMae"
+                  name="instagramMae"
+                  value={formData.instagramMae}
+                  onChange={handleChange}
+                  placeholder="Ex: mirelarugolo"
+                />
+                <p className="form-help">Não precisa incluir o @</p>
+              </div>
+            </>
           )}
 
-          <div className="form-group">
-            <label className="checkbox-label">
-              <input
-                type="checkbox"
-                name="genero"
-                checked={formData.genero === 'menino'}
-                onChange={handleChange}
-              />
-              <span className="checkbox-text">{formData.tipo === 'pet' ? 'É macho' : 'É menino'}</span>
-            </label>
-            <p className="form-help">{formData.tipo === 'pet' ? 'Se não marcar, será considerado fêmea' : 'Se não marcar, será considerado menina'}</p>
-          </div>
+          {/* Campos para Empresa */}
+          {formData.tipo === 'empresa' && (
+            <>
+              <div className="form-group">
+                <label htmlFor="nomeEmpresa">
+                  <span className="icon">🏢</span>
+                  Nome da Empresa
+                </label>
+                <input
+                  type="text"
+                  id="nomeEmpresa"
+                  name="nomeEmpresa"
+                  value={formData.nomeEmpresa}
+                  onChange={handleChange}
+                  placeholder="Ex: BOTU3D"
+                />
+              </div>
 
-          <div className="form-group">
-            <label htmlFor="endereco">
-              <span className="icon">📍</span>
-              Endereço (opcional)
-            </label>
-            <input
-              type="text"
-              id="endereco"
-              name="endereco"
-              value={formData.endereco}
-              onChange={handleChange}
-              placeholder="Ex: Rua Exemplo, 123 - Bairro - Cidade/SP"
-            />
-          </div>
+              <div className="form-group">
+                <label htmlFor="logoEmpresa">
+                  <span className="icon">🖼️</span>
+                  URL do Logo (opcional)
+                </label>
+                <input
+                  type="url"
+                  id="logoEmpresa"
+                  name="logoEmpresa"
+                  value={formData.logoEmpresa}
+                  onChange={handleChange}
+                  placeholder="https://exemplo.com/logo.png"
+                />
+                <p className="form-help">Cole a URL completa da imagem do logo</p>
+              </div>
 
-          <div className="form-row">
-            <div className="form-group">
-              <label htmlFor="nomePai">
-                <span className="icon">{formData.tipo === 'pet' ? '👤' : '👨'}</span>
-                {formData.tipo === 'pet' ? 'Nome do Tutor' : 'Nome do Pai'}
-              </label>
-              <input
-                type="text"
-                id="nomePai"
-                name="nomePai"
-                value={formData.nomePai}
-                onChange={handleChange}
-                placeholder="Ex: Julio Rugolo"
-              />
-            </div>
+              <div className="form-group">
+                <label htmlFor="telefoneEmpresa">
+                  <span className="icon">📞</span>
+                  Telefone da Empresa
+                </label>
+                <input
+                  type="text"
+                  id="telefoneEmpresa"
+                  name="telefoneEmpresa"
+                  value={formData.telefoneEmpresa}
+                  onChange={handleChange}
+                  placeholder="(014) 99164-7966"
+                />
+              </div>
 
-            <div className="form-group">
-              <label htmlFor="telefonePai">
-                <span className="icon">📞</span>
-                {formData.tipo === 'pet' ? 'Telefone do Tutor' : 'Telefone do Pai'}
-              </label>
-              <input
-                type="text"
-                id="telefonePai"
-                name="telefonePai"
-                value={formData.telefonePai}
-                onChange={handleChange}
-                placeholder="(014) 99164-7966"
-              />
-            </div>
-          </div>
+              <div className="form-group">
+                <label htmlFor="enderecoEmpresa">
+                  <span className="icon">📍</span>
+                  Endereço da Empresa (opcional)
+                </label>
+                <input
+                  type="text"
+                  id="enderecoEmpresa"
+                  name="enderecoEmpresa"
+                  value={formData.enderecoEmpresa}
+                  onChange={handleChange}
+                  placeholder="Ex: Rua Exemplo, 123 - Bairro - Cidade/SP"
+                />
+              </div>
 
-          <div className="form-group">
-            <label htmlFor="instagramPai">
-              <span className="icon">📷</span>
-              {formData.tipo === 'pet' ? 'Instagram do Tutor (opcional)' : 'Instagram do Pai (opcional)'}
-            </label>
-            <input
-              type="text"
-              id="instagramPai"
-              name="instagramPai"
-              value={formData.instagramPai}
-              onChange={handleChange}
-              placeholder="Ex: juliorugolo"
-            />
-            <p className="form-help">Não precisa incluir o @</p>
-          </div>
+              <div className="form-group">
+                <label htmlFor="instagramEmpresa">
+                  <span className="icon">📷</span>
+                  Instagram (opcional)
+                </label>
+                <input
+                  type="text"
+                  id="instagramEmpresa"
+                  name="instagramEmpresa"
+                  value={formData.instagramEmpresa}
+                  onChange={handleChange}
+                  placeholder="Ex: botu.3d"
+                />
+                <p className="form-help">Não precisa incluir o @</p>
+              </div>
 
-          <div className="form-row">
-            <div className="form-group">
-              <label htmlFor="nomeMae">
-                <span className="icon">{formData.tipo === 'pet' ? '👤' : '👩'}</span>
-                {formData.tipo === 'pet' ? 'Nome da Tutora' : 'Nome da Mãe'}
-              </label>
-              <input
-                type="text"
-                id="nomeMae"
-                name="nomeMae"
-                value={formData.nomeMae}
-                onChange={handleChange}
-                placeholder="Ex: Mirela Rugolo"
-              />
-            </div>
+              <div className="form-group">
+                <label htmlFor="facebookEmpresa">
+                  <span className="icon">👥</span>
+                  Facebook (opcional)
+                </label>
+                <input
+                  type="text"
+                  id="facebookEmpresa"
+                  name="facebookEmpresa"
+                  value={formData.facebookEmpresa}
+                  onChange={handleChange}
+                  placeholder="Ex: botu3d"
+                />
+                <p className="form-help">Nome de usuário ou página do Facebook</p>
+              </div>
 
-            <div className="form-group">
-              <label htmlFor="telefoneMae">
-                <span className="icon">📞</span>
-                {formData.tipo === 'pet' ? 'Telefone da Tutora' : 'Telefone da Mãe'}
-              </label>
-              <input
-                type="text"
-                id="telefoneMae"
-                name="telefoneMae"
-                value={formData.telefoneMae}
-                onChange={handleChange}
-                placeholder="(014) 99129-7163"
-              />
-            </div>
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="instagramMae">
-              <span className="icon">📷</span>
-              {formData.tipo === 'pet' ? 'Instagram da Tutora (opcional)' : 'Instagram da Mãe (opcional)'}
-            </label>
-            <input
-              type="text"
-              id="instagramMae"
-              name="instagramMae"
-              value={formData.instagramMae}
-              onChange={handleChange}
-              placeholder="Ex: mirelarugolo"
-            />
-            <p className="form-help">Não precisa incluir o @</p>
-          </div>
+              <div className="form-group">
+                <label htmlFor="siteEmpresa">
+                  <span className="icon">🌐</span>
+                  Site (opcional)
+                </label>
+                <input
+                  type="url"
+                  id="siteEmpresa"
+                  name="siteEmpresa"
+                  value={formData.siteEmpresa}
+                  onChange={handleChange}
+                  placeholder="https://www.exemplo.com"
+                />
+              </div>
+            </>
+          )}
 
           <div className="form-actions">
             <button type="button" className="btn btn-clear" onClick={clearForm}>
