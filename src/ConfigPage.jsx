@@ -42,7 +42,7 @@ function ConfigPage() {
     generateUrl()
   }, [formData, baseUrl])
 
-  const formatPhoneInput = (value) => {
+  const formatPhoneInput = (value, isFixed = false) => {
     if (!value) return ''
     // Remove tudo que não é número
     const cleaned = value.replace(/\D/g, '')
@@ -50,6 +50,38 @@ function ConfigPage() {
     // Se não tem nada, retorna vazio
     if (cleaned.length === 0) return ''
     
+    // Telefone fixo: 10 dígitos (DDD + 8) ou 11 dígitos (0 + DDD + 8)
+    if (isFixed) {
+      let digits = cleaned
+      
+      // Limita a 11 dígitos (0 + DDD + 8)
+      if (digits.length > 11) {
+        digits = digits.substring(0, 11)
+      }
+      
+      // Formata: (0XX) XXXX-XXXX ou (XX) XXXX-XXXX
+      if (digits.startsWith('0')) {
+        // Com 0: (0XX) XXXX-XXXX
+        if (digits.length <= 3) {
+          return `(${digits}`
+        } else if (digits.length <= 7) {
+          return `(${digits.substring(0, 3)}) ${digits.substring(3)}`
+        } else {
+          return `(${digits.substring(0, 3)}) ${digits.substring(3, 7)}-${digits.substring(7)}`
+        }
+      } else {
+        // Sem 0: (XX) XXXX-XXXX
+        if (digits.length <= 2) {
+          return `(${digits}`
+        } else if (digits.length <= 6) {
+          return `(${digits.substring(0, 2)}) ${digits.substring(2)}`
+        } else {
+          return `(${digits.substring(0, 2)}) ${digits.substring(2, 6)}-${digits.substring(6)}`
+        }
+      }
+    }
+    
+    // Telefone celular: 11 dígitos (DDD + 9) ou 12 dígitos (0 + DDD + 9)
     // Ajusta o número de dígitos
     let digits = cleaned
     
@@ -97,8 +129,10 @@ function ConfigPage() {
       let processedValue = value
       
       // Se for campo de telefone, formata automaticamente
-      if (name === 'telefonePai' || name === 'telefoneMae') {
-        processedValue = formatPhoneInput(value)
+      if (name === 'telefonePai' || name === 'telefoneMae' || name === 'telefoneCelularEmpresa') {
+        processedValue = formatPhoneInput(value, false)
+      } else if (name === 'telefoneFixoEmpresa') {
+        processedValue = formatPhoneInput(value, true)
       } else {
         processedValue = type === 'checkbox' ? (checked ? 'menino' : 'menina') : value
       }
@@ -176,15 +210,26 @@ function ConfigPage() {
       }
       
       // Para telefones, remove formatação e salva apenas números
-      if (key === 'telefonePai' || key === 'telefoneMae' || key === 'telefoneFixoEmpresa' || key === 'telefoneCelularEmpresa') {
+      if (key === 'telefonePai' || key === 'telefoneMae' || key === 'telefoneCelularEmpresa') {
         value = value.replace(/\D/g, '')
         // Garante que tenha o 0 no início se não tiver (e não já começar com 0)
         if (!value.startsWith('0') && (value.length === 10 || value.length === 11)) {
           value = '0' + value
         }
-        // Limita a 12 dígitos
+        // Limita a 12 dígitos (celular)
         if (value.length > 12) {
           value = value.substring(0, 12)
+        }
+      } else if (key === 'telefoneFixoEmpresa') {
+        value = value.replace(/\D/g, '')
+        // Telefone fixo: 10 dígitos (DDD + 8) ou 11 dígitos (0 + DDD + 8)
+        // Garante que tenha o 0 no início se não tiver (e não já começar com 0)
+        if (!value.startsWith('0') && value.length === 10) {
+          value = '0' + value
+        }
+        // Limita a 11 dígitos (fixo)
+        if (value.length > 11) {
+          value = value.substring(0, 11)
         }
       }
       

@@ -85,11 +85,35 @@ function App() {
     })
   }, [])
 
-  const formatPhone = (phone) => {
+  const formatPhone = (phone, isFixed = false) => {
     if (!phone) return ''
     // Remove caracteres não numéricos
     let cleaned = phone.replace(/\D/g, '')
     
+    // Telefone fixo: 10 dígitos (DDD + 8) ou 11 dígitos (0 + DDD + 8)
+    if (isFixed) {
+      if (cleaned.startsWith('0')) {
+        // Formato com 0: (0XX) XXXX-XXXX
+        if (cleaned.length === 11) {
+          return `(${cleaned.substring(0, 3)}) ${cleaned.substring(3, 7)}-${cleaned.substring(7)}`
+        } else if (cleaned.length > 11) {
+          cleaned = cleaned.substring(0, 11)
+          return `(${cleaned.substring(0, 3)}) ${cleaned.substring(3, 7)}-${cleaned.substring(7)}`
+        }
+      } else {
+        // Formato sem 0: (XX) XXXX-XXXX
+        if (cleaned.length === 10) {
+          return `(${cleaned.substring(0, 2)}) ${cleaned.substring(2, 6)}-${cleaned.substring(6)}`
+        } else if (cleaned.length > 10) {
+          cleaned = cleaned.substring(0, 10)
+          return `(${cleaned.substring(0, 2)}) ${cleaned.substring(2, 6)}-${cleaned.substring(6)}`
+        }
+      }
+      // Se não conseguir formatar, retorna como está
+      return phone
+    }
+    
+    // Telefone celular: 11 dígitos (DDD + 9 dígitos) ou 12 dígitos (0 + DDD + 9 dígitos)
     // Se já começa com 0, mantém como está
     if (cleaned.startsWith('0')) {
       // Limita a 12 dígitos
@@ -105,10 +129,10 @@ function App() {
     
     // Formata como (0XX) XXXXX-XXXX (12 dígitos total)
     if (cleaned.length === 12) {
-      // Formato completo: (0XX) XXXXX-XXXX
+      // Formato completo: (0XX) 9XXXX-XXXX
       return `(${cleaned.substring(0, 3)}) ${cleaned.substring(3, 8)}-${cleaned.substring(8)}`
     } else if (cleaned.length === 11) {
-      // Formato antigo sem 0: (XX) XXXXX-XXXX
+      // Formato antigo sem 0: (XX) 9XXXX-XXXX
       return `(${cleaned.substring(0, 2)}) ${cleaned.substring(2, 7)}-${cleaned.substring(7)}`
     } else if (cleaned.length === 10) {
       // Formato fixo: (XX) XXXX-XXXX
@@ -350,14 +374,14 @@ function App() {
                           alert('Número copiado!')
                         })
                       }}>
-                        {formatPhone(info.telefoneFixoEmpresa)}
+                        {formatPhone(info.telefoneFixoEmpresa, true)}
                       </div>
                     </div>
                     <div className="contact-buttons">
                       <button 
                         className="btn-icon btn-phone-icon" 
                         onClick={() => handleCall(info.telefoneFixoEmpresa)}
-                        title={`Ligar ${formatPhone(info.telefoneFixoEmpresa)}`}
+                        title={`Ligar ${formatPhone(info.telefoneFixoEmpresa, true)}`}
                       >
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                           <path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z" fill="currentColor"/>
