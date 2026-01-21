@@ -20,7 +20,8 @@ function ConfigPage() {
     // Campos para empresa
     nomeEmpresa: '',
     logoEmpresa: '', // URL da imagem do logo
-    telefoneEmpresa: '',
+    telefoneFixoEmpresa: '',
+    telefoneCelularEmpresa: '',
     enderecoEmpresa: '',
     instagramEmpresa: '',
     facebookEmpresa: '',
@@ -114,7 +115,8 @@ function ConfigPage() {
           // Limpa campos de empresa
           newData.nomeEmpresa = ''
           newData.logoEmpresa = ''
-          newData.telefoneEmpresa = ''
+          newData.telefoneFixoEmpresa = ''
+          newData.telefoneCelularEmpresa = ''
           newData.enderecoEmpresa = ''
           newData.instagramEmpresa = ''
           newData.facebookEmpresa = ''
@@ -123,7 +125,8 @@ function ConfigPage() {
           // Limpa campos de empresa
           newData.nomeEmpresa = ''
           newData.logoEmpresa = ''
-          newData.telefoneEmpresa = ''
+          newData.telefoneFixoEmpresa = ''
+          newData.telefoneCelularEmpresa = ''
           newData.enderecoEmpresa = ''
           newData.instagramEmpresa = ''
           newData.facebookEmpresa = ''
@@ -159,7 +162,7 @@ function ConfigPage() {
       
       // Não inclui campos de empresa se tipo não for 'empresa'
       if (formData.tipo !== 'empresa' && (key === 'nomeEmpresa' || key === 'logoEmpresa' || 
-          key === 'telefoneEmpresa' || key === 'enderecoEmpresa' || key === 'instagramEmpresa' || 
+          key === 'telefoneFixoEmpresa' || key === 'telefoneCelularEmpresa' || key === 'enderecoEmpresa' || key === 'instagramEmpresa' || 
           key === 'facebookEmpresa' || key === 'siteEmpresa')) {
         return
       }
@@ -173,7 +176,7 @@ function ConfigPage() {
       }
       
       // Para telefones, remove formatação e salva apenas números
-      if (key === 'telefonePai' || key === 'telefoneMae' || key === 'telefoneEmpresa') {
+      if (key === 'telefonePai' || key === 'telefoneMae' || key === 'telefoneFixoEmpresa' || key === 'telefoneCelularEmpresa') {
         value = value.replace(/\D/g, '')
         // Garante que tenha o 0 no início se não tiver (e não já começar com 0)
         if (!value.startsWith('0') && (value.length === 10 || value.length === 11)) {
@@ -231,7 +234,8 @@ function ConfigPage() {
       telefoneMae: '',
       nomeEmpresa: '',
       logoEmpresa: '',
-      telefoneEmpresa: '',
+      telefoneFixoEmpresa: '',
+      telefoneCelularEmpresa: '',
       enderecoEmpresa: '',
       instagramEmpresa: '',
       facebookEmpresa: '',
@@ -500,19 +504,38 @@ function ConfigPage() {
                 <p className="form-help">Cole a URL completa da imagem do logo</p>
               </div>
 
-              <div className="form-group">
-                <label htmlFor="telefoneEmpresa">
-                  <span className="icon">📞</span>
-                  Telefone da Empresa
-                </label>
-                <input
-                  type="text"
-                  id="telefoneEmpresa"
-                  name="telefoneEmpresa"
-                  value={formData.telefoneEmpresa}
-                  onChange={handleChange}
-                  placeholder="(014) 99164-7966"
-                />
+              <div className="form-row">
+                <div className="form-group">
+                  <label htmlFor="telefoneFixoEmpresa">
+                    <span className="icon">📞</span>
+                    Telefone Fixo (opcional)
+                  </label>
+                  <input
+                    type="text"
+                    id="telefoneFixoEmpresa"
+                    name="telefoneFixoEmpresa"
+                    value={formData.telefoneFixoEmpresa}
+                    onChange={handleChange}
+                    placeholder="(014) 3333-4444"
+                  />
+                  <p className="form-help">Apenas para ligação</p>
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="telefoneCelularEmpresa">
+                    <span className="icon">📱</span>
+                    Telefone Celular (opcional)
+                  </label>
+                  <input
+                    type="text"
+                    id="telefoneCelularEmpresa"
+                    name="telefoneCelularEmpresa"
+                    value={formData.telefoneCelularEmpresa}
+                    onChange={handleChange}
+                    placeholder="(014) 99164-7966"
+                  />
+                  <p className="form-help">Para WhatsApp</p>
+                </div>
               </div>
 
               <div className="form-group">
