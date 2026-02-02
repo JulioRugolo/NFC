@@ -7,10 +7,12 @@ function ConfigPage() {
   const navigate = useNavigate()
   const [formData, setFormData] = useState({
     tipo: 'crianca', // 'crianca', 'pet' ou 'empresa'
+    usoProprio: false, // se true (apenas crianca), exibe dados da própria pessoa
     nomeCrianca: '',
     tipoPet: '', // 'gato' ou 'cachorro' (apenas se tipo for 'pet')
     genero: 'menina', // 'menino' ou 'menina'
     endereco: '',
+    telefonePessoa: '',
     nomePai: '',
     nomeMae: '',
     instagramPai: '',
@@ -129,12 +131,17 @@ function ConfigPage() {
       let processedValue = value
       
       // Se for campo de telefone, formata automaticamente
-      if (name === 'telefonePai' || name === 'telefoneMae' || name === 'telefoneCelularEmpresa') {
+      if (name === 'telefonePai' || name === 'telefoneMae' || name === 'telefoneCelularEmpresa' || name === 'telefonePessoa') {
         processedValue = formatPhoneInput(value, false)
       } else if (name === 'telefoneFixoEmpresa') {
         processedValue = formatPhoneInput(value, true)
       } else {
-        processedValue = type === 'checkbox' ? (checked ? 'menino' : 'menina') : value
+        if (type === 'checkbox') {
+          // Checkbox de gênero é especial (salva string menino/menina)
+          processedValue = name === 'genero' ? (checked ? 'menino' : 'menina') : checked
+        } else {
+          processedValue = value
+        }
       }
       
       const newData = {
@@ -146,6 +153,8 @@ function ConfigPage() {
       if (name === 'tipo') {
         if (value === 'crianca') {
           newData.tipoPet = ''
+          newData.usoProprio = false
+          newData.telefonePessoa = ''
           // Limpa campos de empresa
           newData.nomeEmpresa = ''
           newData.logoEmpresa = ''
@@ -156,6 +165,8 @@ function ConfigPage() {
           newData.facebookEmpresa = ''
           newData.siteEmpresa = ''
         } else if (value === 'pet') {
+          newData.usoProprio = false
+          newData.telefonePessoa = ''
           // Limpa campos de empresa
           newData.nomeEmpresa = ''
           newData.logoEmpresa = ''
@@ -167,6 +178,7 @@ function ConfigPage() {
           newData.siteEmpresa = ''
         } else if (value === 'empresa') {
           // Limpa campos de criança/pet
+          newData.usoProprio = false
           newData.nomeCrianca = ''
           newData.tipoPet = ''
           newData.genero = 'menina'
@@ -176,7 +188,18 @@ function ConfigPage() {
           newData.instagramMae = ''
           newData.telefonePai = ''
           newData.telefoneMae = ''
+          newData.telefonePessoa = ''
         }
+      }
+
+      // Se marcou uso próprio, limpa dados de responsáveis
+      if (name === 'usoProprio' && checked) {
+        newData.nomePai = ''
+        newData.nomeMae = ''
+        newData.instagramPai = ''
+        newData.instagramMae = ''
+        newData.telefonePai = ''
+        newData.telefoneMae = ''
       }
       
       return newData
@@ -205,12 +228,22 @@ function ConfigPage() {
       if (formData.tipo === 'empresa' && (key === 'nomeCrianca' || key === 'tipoPet' || 
           key === 'genero' || key === 'nomePai' || key === 'nomeMae' || 
           key === 'instagramPai' || key === 'instagramMae' || 
-          key === 'telefonePai' || key === 'telefoneMae')) {
+          key === 'telefonePai' || key === 'telefoneMae' || key === 'usoProprio' || key === 'telefonePessoa')) {
+        return
+      }
+
+      // Se for uso próprio (crianca), não inclui dados de responsáveis nem gênero
+      if (formData.tipo === 'crianca' && formData.usoProprio && (
+        key === 'nomePai' || key === 'nomeMae' ||
+        key === 'instagramPai' || key === 'instagramMae' ||
+        key === 'telefonePai' || key === 'telefoneMae' ||
+        key === 'genero'
+      )) {
         return
       }
       
       // Para telefones, remove formatação e salva apenas números
-      if (key === 'telefonePai' || key === 'telefoneMae' || key === 'telefoneCelularEmpresa') {
+      if (key === 'telefonePai' || key === 'telefoneMae' || key === 'telefoneCelularEmpresa' || key === 'telefonePessoa') {
         value = value.replace(/\D/g, '')
         // Garante que tenha o 0 no início se não tiver (e não já começar com 0)
         if (!value.startsWith('0') && (value.length === 10 || value.length === 11)) {
@@ -267,10 +300,12 @@ function ConfigPage() {
   const clearForm = () => {
     setFormData({
       tipo: 'crianca',
+      usoProprio: false,
       nomeCrianca: '',
       tipoPet: '',
       genero: 'menina',
       endereco: '',
+      telefonePessoa: '',
       nomePai: '',
       nomeMae: '',
       instagramPai: '',
@@ -343,10 +378,24 @@ function ConfigPage() {
           {/* Campos de Criança/Pet - Ocultos quando tipo for 'empresa' */}
           {formData.tipo !== 'empresa' && (
             <>
+              {formData.tipo === 'crianca' && (
+                <div className="form-group">
+                  <label className="checkbox-label">
+                    <input
+                      type="checkbox"
+                      name="usoProprio"
+                      checked={!!formData.usoProprio}
+                      onChange={handleChange}
+                    />
+                    <span className="checkbox-text">Uso próprio (não é para criança)</span>
+                  </label>
+                  <p className="form-help">Se marcar, a página mostrará seu nome/telefone/endereço (sem pai/mãe)</p>
+                </div>
+              )}
               <div className="form-group">
                 <label htmlFor="nomeCrianca">
                   <span className="icon">{formData.tipo === 'pet' ? '🐾' : '👶'}</span>
-                  {formData.tipo === 'pet' ? 'Nome do Pet' : 'Nome da Criança'}
+                  {formData.tipo === 'pet' ? 'Nome do Pet' : (formData.usoProprio ? 'Nome da Pessoa' : 'Nome da Criança')}
                 </label>
                 <input
                   type="text"
@@ -354,7 +403,7 @@ function ConfigPage() {
                   name="nomeCrianca"
                   value={formData.nomeCrianca}
                   onChange={handleChange}
-                  placeholder={formData.tipo === 'pet' ? 'Ex: Rex' : 'Ex: Anna Julia Rugolo'}
+                  placeholder={formData.tipo === 'pet' ? 'Ex: Rex' : (formData.usoProprio ? 'Ex: Caio' : 'Ex: Anna Julia Rugolo')}
                 />
               </div>
 
@@ -389,18 +438,21 @@ function ConfigPage() {
                 </div>
               )}
 
-              <div className="form-group">
-                <label className="checkbox-label">
-                  <input
-                    type="checkbox"
-                    name="genero"
-                    checked={formData.genero === 'menino'}
-                    onChange={handleChange}
-                  />
-                  <span className="checkbox-text">{formData.tipo === 'pet' ? 'É macho' : 'É menino'}</span>
-                </label>
-                <p className="form-help">{formData.tipo === 'pet' ? 'Se não marcar, será considerado fêmea' : 'Se não marcar, será considerado menina'}</p>
-              </div>
+              {/* Gênero só faz sentido para pet e criança (quando NÃO for uso próprio) */}
+              {(formData.tipo === 'pet' || (formData.tipo === 'crianca' && !formData.usoProprio)) && (
+                <div className="form-group">
+                  <label className="checkbox-label">
+                    <input
+                      type="checkbox"
+                      name="genero"
+                      checked={formData.genero === 'menino'}
+                      onChange={handleChange}
+                    />
+                    <span className="checkbox-text">{formData.tipo === 'pet' ? 'É macho' : 'É menino'}</span>
+                  </label>
+                  <p className="form-help">{formData.tipo === 'pet' ? 'Se não marcar, será considerado fêmea' : 'Se não marcar, será considerado menina'}</p>
+                </div>
+              )}
 
               <div className="form-group">
                 <label htmlFor="endereco">
@@ -417,101 +469,124 @@ function ConfigPage() {
                 />
               </div>
 
-              <div className="form-row">
+              {/* Uso próprio: um único telefone da pessoa */}
+              {formData.tipo === 'crianca' && formData.usoProprio && (
                 <div className="form-group">
-                  <label htmlFor="nomePai">
-                    <span className="icon">{formData.tipo === 'pet' ? '👤' : '👨'}</span>
-                    {formData.tipo === 'pet' ? 'Nome do Tutor' : 'Nome do Pai'}
-                  </label>
-                  <input
-                    type="text"
-                    id="nomePai"
-                    name="nomePai"
-                    value={formData.nomePai}
-                    onChange={handleChange}
-                    placeholder="Ex: Julio Rugolo"
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label htmlFor="telefonePai">
+                  <label htmlFor="telefonePessoa">
                     <span className="icon">📞</span>
-                    {formData.tipo === 'pet' ? 'Telefone do Tutor' : 'Telefone do Pai'}
+                    Telefone (WhatsApp)
                   </label>
                   <input
                     type="text"
-                    id="telefonePai"
-                    name="telefonePai"
-                    value={formData.telefonePai}
+                    id="telefonePessoa"
+                    name="telefonePessoa"
+                    value={formData.telefonePessoa}
                     onChange={handleChange}
                     placeholder="(014) 99164-7966"
                   />
                 </div>
-              </div>
+              )}
 
-              <div className="form-group">
-                <label htmlFor="instagramPai">
-                  <span className="icon">📷</span>
-                  {formData.tipo === 'pet' ? 'Instagram do Tutor (opcional)' : 'Instagram do Pai (opcional)'}
-                </label>
-                <input
-                  type="text"
-                  id="instagramPai"
-                  name="instagramPai"
-                  value={formData.instagramPai}
-                  onChange={handleChange}
-                  placeholder="Ex: juliorugolo"
-                />
-                <p className="form-help">Não precisa incluir o @</p>
-              </div>
+              {/* Responsáveis (pet sempre tem tutor; criança só se NÃO for uso próprio) */}
+              {(formData.tipo === 'pet' || (formData.tipo === 'crianca' && !formData.usoProprio)) && (
+                <>
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label htmlFor="nomePai">
+                        <span className="icon">{formData.tipo === 'pet' ? '👤' : '👨'}</span>
+                        {formData.tipo === 'pet' ? 'Nome do Tutor' : 'Nome do Pai'}
+                      </label>
+                      <input
+                        type="text"
+                        id="nomePai"
+                        name="nomePai"
+                        value={formData.nomePai}
+                        onChange={handleChange}
+                        placeholder="Ex: Julio Rugolo"
+                      />
+                    </div>
 
-              <div className="form-row">
-                <div className="form-group">
-                  <label htmlFor="nomeMae">
-                    <span className="icon">{formData.tipo === 'pet' ? '👤' : '👩'}</span>
-                    {formData.tipo === 'pet' ? 'Nome da Tutora' : 'Nome da Mãe'}
-                  </label>
-                  <input
-                    type="text"
-                    id="nomeMae"
-                    name="nomeMae"
-                    value={formData.nomeMae}
-                    onChange={handleChange}
-                    placeholder="Ex: Mirela Rugolo"
-                  />
-                </div>
+                    <div className="form-group">
+                      <label htmlFor="telefonePai">
+                        <span className="icon">📞</span>
+                        {formData.tipo === 'pet' ? 'Telefone do Tutor' : 'Telefone do Pai'}
+                      </label>
+                      <input
+                        type="text"
+                        id="telefonePai"
+                        name="telefonePai"
+                        value={formData.telefonePai}
+                        onChange={handleChange}
+                        placeholder="(014) 99164-7966"
+                      />
+                    </div>
+                  </div>
 
-                <div className="form-group">
-                  <label htmlFor="telefoneMae">
-                    <span className="icon">📞</span>
-                    {formData.tipo === 'pet' ? 'Telefone da Tutora' : 'Telefone da Mãe'}
-                  </label>
-                  <input
-                    type="text"
-                    id="telefoneMae"
-                    name="telefoneMae"
-                    value={formData.telefoneMae}
-                    onChange={handleChange}
-                    placeholder="(014) 99129-7163"
-                  />
-                </div>
-              </div>
+                  <div className="form-group">
+                    <label htmlFor="instagramPai">
+                      <span className="icon">📷</span>
+                      {formData.tipo === 'pet' ? 'Instagram do Tutor (opcional)' : 'Instagram do Pai (opcional)'}
+                    </label>
+                    <input
+                      type="text"
+                      id="instagramPai"
+                      name="instagramPai"
+                      value={formData.instagramPai}
+                      onChange={handleChange}
+                      placeholder="Ex: juliorugolo"
+                    />
+                    <p className="form-help">Não precisa incluir o @</p>
+                  </div>
 
-              <div className="form-group">
-                <label htmlFor="instagramMae">
-                  <span className="icon">📷</span>
-                  {formData.tipo === 'pet' ? 'Instagram da Tutora (opcional)' : 'Instagram da Mãe (opcional)'}
-                </label>
-                <input
-                  type="text"
-                  id="instagramMae"
-                  name="instagramMae"
-                  value={formData.instagramMae}
-                  onChange={handleChange}
-                  placeholder="Ex: mirelarugolo"
-                />
-                <p className="form-help">Não precisa incluir o @</p>
-              </div>
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label htmlFor="nomeMae">
+                        <span className="icon">{formData.tipo === 'pet' ? '👤' : '👩'}</span>
+                        {formData.tipo === 'pet' ? 'Nome da Tutora' : 'Nome da Mãe'}
+                      </label>
+                      <input
+                        type="text"
+                        id="nomeMae"
+                        name="nomeMae"
+                        value={formData.nomeMae}
+                        onChange={handleChange}
+                        placeholder="Ex: Mirela Rugolo"
+                      />
+                    </div>
+
+                    <div className="form-group">
+                      <label htmlFor="telefoneMae">
+                        <span className="icon">📞</span>
+                        {formData.tipo === 'pet' ? 'Telefone da Tutora' : 'Telefone da Mãe'}
+                      </label>
+                      <input
+                        type="text"
+                        id="telefoneMae"
+                        name="telefoneMae"
+                        value={formData.telefoneMae}
+                        onChange={handleChange}
+                        placeholder="(014) 99129-7163"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="form-group">
+                    <label htmlFor="instagramMae">
+                      <span className="icon">📷</span>
+                      {formData.tipo === 'pet' ? 'Instagram da Tutora (opcional)' : 'Instagram da Mãe (opcional)'}
+                    </label>
+                    <input
+                      type="text"
+                      id="instagramMae"
+                      name="instagramMae"
+                      value={formData.instagramMae}
+                      onChange={handleChange}
+                      placeholder="Ex: mirelarugolo"
+                    />
+                    <p className="form-help">Não precisa incluir o @</p>
+                  </div>
+                </>
+              )}
             </>
           )}
 
