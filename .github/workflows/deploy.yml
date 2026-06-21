@@ -1,0 +1,41 @@
+name: Deploy Coolify
+
+on:
+  push:
+    branches: [main]
+
+concurrency:
+  group: deploy-nfc-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: [self-hosted, jrx-vps, linux]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Disparar deploy no Coolify
+        env:
+          REPO_FULL_NAME: JulioRugolo/NFC
+          SHA: ${{ github.sha }}
+          BEFORE: ${{ github.event.before }}
+          TRIGGER_SCRIPT: /opt/jrx/docs/scripts/trigger-coolify-deploy.sh
+        run: |
+          set -euo pipefail
+          if [[ ! -x "$TRIGGER_SCRIPT" ]]; then
+            echo "::error::Script $TRIGGER_SCRIPT ausente na VPS."
+            exit 1
+          fi
+          if [ -n "$BEFORE" ] && [ "$BEFORE" != "0000000000000000000000000000000000000000" ]; then
+            mapfile -t CHANGED < <(git diff --name-only "$BEFORE" "$SHA")
+          else
+            mapfile -t CHANGED < <(git diff-tree --no-commit-id --name-only -r "$SHA")
+          fi
+          "$TRIGGER_SCRIPT" "$REPO_FULL_NAME" "$SHA" "${CHANGED[@]}"
+
+      - name: Health check
+        run: |
+          curl -sf --max-time 120 https://nfc.jrxsistemas.com.br/api/health | jq -e '.status == "ok"' >/dev/null
+          echo "Health check OK."

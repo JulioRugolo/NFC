@@ -7,6 +7,7 @@ RUN apt-get update && apt-get install -y \
     xvfb \
     fontconfig \
     wget \
+    curl \
     unzip \
     && rm -rf /var/lib/apt/lists/*
 
