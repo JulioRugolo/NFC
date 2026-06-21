@@ -1,4 +1,4 @@
-# Dockerfile para Railway com OpenSCAD pré-instalado
+# Dockerfile para Coolify/VPS com OpenSCAD pré-instalado
 FROM node:18-slim
 
 # Instala dependências do sistema, OpenSCAD, Xvfb e fontconfig
@@ -22,8 +22,8 @@ WORKDIR /app
 # Copia arquivos de dependências
 COPY package*.json ./
 
-# Instala dependências do Node.js
-RUN npm install --legacy-peer-deps
+# Instala dependências (inclui devDependencies para o build Vite)
+RUN npm install --legacy-peer-deps --include=dev
 
 # Copia o código da aplicação
 COPY . .
@@ -31,7 +31,10 @@ COPY . .
 # Build do frontend
 RUN npm run build
 
-# Expõe a porta (Railway usa a variável PORT)
+# Remove devDependencies após o build
+RUN npm prune --omit=dev
+
+# Expõe a porta (Coolify usa a variável PORT)
 EXPOSE 3001
 
 # Comando para iniciar o servidor
