@@ -37,7 +37,7 @@ export default function ProgressModal({ isOpen, progress, message, onClose }) {
               <span className="step-icon">3</span>
               <span className="step-label">Gerando texto...</span>
             </div>
-            <div className={`step ${progress >= 100 ? 'completed' : progress >= 95 ? 'active' : ''}`}>
+            <div className={`step ${progress >= 100 ? 'completed' : progress >= 92 ? 'active' : ''}`}>
               <span className="step-icon">4</span>
               <span className="step-label">Finalizando...</span>
             </div>

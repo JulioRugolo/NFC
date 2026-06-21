@@ -11,12 +11,17 @@ const execAsync = promisify(exec)
 const app = express()
 const PORT = process.env.PORT || 3001
 
+// $fn alto = muito lento no OpenSCAD (texto + offset). Benchmark VPS: fn=100 ~92s, fn=30 ~16s.
+const OPENSCAD_FN_EXPORT = 30
+const OPENSCAD_FN_PREVIEW = 50
+const OPENSCAD_EXPORT_TIMEOUT_MS = 90000
+
 // Middlewares básicos (devem vir primeiro)
 app.use(cors())
 app.use(express.json())
 
 // Função para gerar código OpenSCAD (precisa estar antes das rotas)
-function generateOpenSCAD(config) {
+function generateOpenSCAD(config, { fn = OPENSCAD_FN_EXPORT } = {}) {
   const { name, line2, show2ndLine, faceDownMode, fontSize, thickness, textThickness,
           keychainHoleSize, keychainHoleOffset, edgeRadius, line2Offset, line2VerticalOffset,
           boxWidth, boxHeight, boxXOffset, boxYOffset, font, fontStyle } = config
@@ -25,7 +30,7 @@ function generateOpenSCAD(config) {
   const textRgb = hexToRgb(config.textColor || '#ffffff')
 
   return `// Parameters
-$fn = 100;
+$fn = ${fn};
 name = "${name.replace(/"/g, '\\"')}"; // Change this to the desired name
 line2 = "${line2.replace(/"/g, '\\"')}"; // Change this to the desired second line text
 2ndline = ${show2ndLine};
@@ -165,6 +170,31 @@ async function findOpenSCAD() {
   }
   
   return { openscadPath, isMac, isWindows }
+}
+
+// Exportação geométrica (STL/3MF) não precisa de display — xvfb só atrasava ~0.5s e era desnecessário.
+function buildOpenSCADCommand(openscadPath, outputFile, scadFile, { useXvfb = false, extraArgs = '' } = {}) {
+  const base = `"${openscadPath}" ${extraArgs} -o "${outputFile}" "${scadFile}"`
+  if (useXvfb && process.platform === 'linux') {
+    return `xvfb-run -a -s "-screen 0 1024x768x24" ${base}`
+  }
+  return base
+}
+
+async function exportWithOpenSCAD(openscadPath, outputFile, scadFile, { useXvfb = false, extraArgs = '', timeoutMs = OPENSCAD_EXPORT_TIMEOUT_MS } = {}) {
+  const command = buildOpenSCADCommand(openscadPath, outputFile, scadFile, { useXvfb, extraArgs })
+  console.log(`🔧 Executando: ${command}`)
+  const started = Date.now()
+  const { stderr } = await execAsync(command, { timeout: timeoutMs })
+  if (stderr && !stderr.includes('WARNING') && !stderr.includes('INFO')) {
+    console.warn('OpenSCAD stderr:', stderr)
+  }
+  const content = await readFile(outputFile)
+  if (content.length === 0) {
+    throw new Error('Arquivo gerado está vazio')
+  }
+  console.log(`✅ Exportado em ${((Date.now() - started) / 1000).toFixed(1)}s (${content.length} bytes) → ${outputFile}`)
+  return content
 }
 
 // ========== ROTAS DE API (devem vir ANTES do catch-all) ==========
@@ -320,15 +350,9 @@ app.post('/api/generate-3d-model', async (req, res) => {
     // 2. Detecta OpenSCAD
     const { openscadPath } = await findOpenSCAD()
 
-    // 3. Gera STLs separados usando OpenSCAD
-    const isLinux = process.platform === 'linux'
-    const baseStlCommand = isLinux
-      ? `xvfb-run -a -s "-screen 0 1024x768x24" "${openscadPath}" -o "${baseStlFile}" "${baseScadFile}"`
-      : `"${openscadPath}" -o "${baseStlFile}" "${baseScadFile}"`
-    
-    const textStlCommand = isLinux
-      ? `xvfb-run -a -s "-screen 0 1024x768x24" "${openscadPath}" -o "${textStlFile}" "${textScadFile}"`
-      : `"${openscadPath}" -o "${textStlFile}" "${textScadFile}"`
+    // 3. Gera STLs separados usando OpenSCAD (sem xvfb — exportação geométrica)
+    const baseStlCommand = buildOpenSCADCommand(openscadPath, baseStlFile, baseScadFile)
+    const textStlCommand = buildOpenSCADCommand(openscadPath, textStlFile, textScadFile)
     
     console.log(`🔧 Gerando STLs: base e texto`)
 
@@ -417,8 +441,8 @@ app.post('/api/generate-preview', async (req, res) => {
       return res.status(400).json({ error: 'Nome é obrigatório' })
     }
 
-    // 1. Gera o arquivo OpenSCAD
-    const openSCADCode = generateOpenSCAD(config)
+    // 1. Gera o arquivo OpenSCAD (fn=50 — preview PNG)
+    const openSCADCode = generateOpenSCAD(config, { fn: OPENSCAD_FN_PREVIEW })
     await writeFile(scadFile, openSCADCode, 'utf8')
     console.log(`📝 Arquivo OpenSCAD criado para preview: ${scadFile}`)
 
@@ -432,10 +456,12 @@ app.post('/api/generate-preview', async (req, res) => {
     // --viewall: ajusta a câmera para mostrar tudo
     // --autocenter: centraliza o modelo
     // -o com extensão .png: exporta como PNG
-    const isLinux = process.platform === 'linux'
-    const previewCommand = isLinux
-      ? `xvfb-run -a -s "-screen 0 1024x768x24" "${openscadPath}" --render --imgsize=800,600 --viewall --autocenter "${scadFile}" -o "${previewImage}"`
-      : `"${openscadPath}" --render --imgsize=800,600 --viewall --autocenter "${scadFile}" -o "${previewImage}"`
+    const previewCommand = buildOpenSCADCommand(
+      openscadPath,
+      previewImage,
+      scadFile,
+      { useXvfb: true, extraArgs: '--render --imgsize=800,600 --viewall --autocenter' }
+    )
     console.log(`🔧 Gerando preview: ${previewCommand}`)
 
     try {
@@ -491,125 +517,68 @@ app.post('/api/generate-preview', async (req, res) => {
   }
 })
 
-// Rota para gerar SCAD, abrir no OpenSCAD e exportar 3MF automaticamente
+// Rota para gerar SCAD e exportar 3MF (fallback STL)
 app.post('/api/generate-and-export-3mf', async (req, res) => {
   const config = req.body
   const tempId = randomUUID()
   const tempDir = tmpdir()
   const scadFile = join(tempDir, `keychain_${tempId}.scad`)
   const output3mfFile = join(tempDir, `keychain_${tempId}.3mf`)
+  const stlFile = join(tempDir, `keychain_${tempId}.stl`)
 
   try {
     if (!config.name) {
       return res.status(400).json({ error: 'Nome é obrigatório' })
     }
 
-    // 1. Gera o arquivo OpenSCAD
-    const openSCADCode = generateOpenSCAD(config)
+    const openSCADCode = generateOpenSCAD(config, { fn: OPENSCAD_FN_EXPORT })
     await writeFile(scadFile, openSCADCode, 'utf8')
-    console.log(`📝 Arquivo OpenSCAD criado: ${scadFile}`)
+    console.log(`📝 Arquivo OpenSCAD criado (fn=${OPENSCAD_FN_EXPORT}): ${scadFile}`)
 
-    // 2. Detecta OpenSCAD
     const { openscadPath } = await findOpenSCAD()
 
-    // 3. Executa OpenSCAD via linha de comando para renderizar e exportar 3MF
-    // Nota: No Railway (Linux), usa Xvfb para renderização sem display
-    const isLinux = process.platform === 'linux'
-    
-    // Tenta gerar 3MF primeiro
     let fileContent = null
     let contentType = 'application/3mf'
     let fileExtension = '3mf'
     let outputFile = output3mfFile
-    
+
     try {
-      const openscadCommand = isLinux
-        ? `xvfb-run -a -s "-screen 0 1024x768x24" "${openscadPath}" -o "${output3mfFile}" "${scadFile}"`
-        : `"${openscadPath}" -o "${output3mfFile}" "${scadFile}"`
-      
-      console.log(`🔧 Executando: ${openscadCommand}`)
-      
-      const { stdout, stderr } = await execAsync(openscadCommand, { timeout: 120000 })
-      
-      if (stderr && !stderr.includes('WARNING') && !stderr.includes('INFO')) {
-        console.warn('OpenSCAD stderr:', stderr)
-      }
-      
-      // Verifica se o arquivo foi criado
-      try {
-        fileContent = await readFile(output3mfFile)
-        
-        if (fileContent.length === 0) {
-          throw new Error('Arquivo 3MF gerado está vazio')
-        }
-        
-        console.log(`✅ Arquivo 3MF gerado com sucesso (${fileContent.length} bytes)`)
-      } catch (readErr) {
-        console.log('⚠️ Arquivo 3MF não encontrado ou vazio, tentando STL...')
-        throw new Error('3MF não disponível')
-      }
-      
+      fileContent = await exportWithOpenSCAD(openscadPath, output3mfFile, scadFile)
     } catch (exportErr) {
-      // Se 3MF falhar, tenta STL
-      console.log('📦 3MF não suportado ou falhou, tentando STL...')
-      const stlFile = join(tempDir, `keychain_${tempId}.stl`)
-      const stlCommand = isLinux
-        ? `xvfb-run -a -s "-screen 0 1024x768x24" "${openscadPath}" -o "${stlFile}" "${scadFile}"`
-        : `"${openscadPath}" -o "${stlFile}" "${scadFile}"`
-      
+      console.log('📦 3MF falhou, tentando STL...', exportErr.message)
       try {
-        console.log(`🔧 Executando STL: ${stlCommand}`)
-        const { stdout, stderr } = await execAsync(stlCommand, { timeout: 120000 })
-        
-        if (stderr && !stderr.includes('WARNING') && !stderr.includes('INFO')) {
-          console.warn('OpenSCAD stderr (STL):', stderr)
-        }
-        
-        fileContent = await readFile(stlFile)
-        
-        if (fileContent.length === 0) {
-          throw new Error('Arquivo STL gerado está vazio')
-        }
-        
-        contentType = 'application/sla'
+        fileContent = await exportWithOpenSCAD(openscadPath, stlFile, scadFile)
+        contentType = 'model/stl'
         fileExtension = 'stl'
         outputFile = stlFile
-        
-        console.log(`✅ Arquivo STL gerado com sucesso (${fileContent.length} bytes)`)
-        
-        // Limpa arquivo 3MF se existir
         await unlink(output3mfFile).catch(() => {})
-        
       } catch (stlErr) {
-        console.error('❌ Erro ao gerar STL:', stlErr)
         const errorDetails = stlErr.stderr || stlErr.message || 'Erro desconhecido'
         throw new Error(`OpenSCAD execution failed: ${errorDetails}`)
       }
     }
-    
-    // Limpa arquivo temporário SCAD
+
     await unlink(scadFile).catch(() => {})
-    
-    // Retorna o arquivo
+
     res.setHeader('Content-Type', contentType)
     res.setHeader('Content-Disposition', `attachment; filename="keychain_${config.name.replace(/\s+/g, '_')}.${fileExtension}"`)
     res.send(fileContent)
-    
-    // Limpa o arquivo após enviar
+
     setTimeout(() => {
       unlink(outputFile).catch(() => {})
     }, 5000)
 
   } catch (error) {
     console.error('Erro ao gerar e exportar 3MF:', error)
-    
+
     await unlink(scadFile).catch(() => {})
     await unlink(output3mfFile).catch(() => {})
-    
+    await unlink(stlFile).catch(() => {})
+
     const isWindows = process.platform === 'win32'
     const isMac = process.platform === 'darwin'
     let hint = 'Certifique-se de que o OpenSCAD está instalado'
-    
+
     if (error.message.includes('command not found') || error.message.includes('openscad')) {
       if (isMac) {
         hint = 'OpenSCAD não encontrado. Instale via:\n1. Homebrew: brew install --cask openscad\n2. Ou baixe de https://openscad.org/downloads.html\n3. Depois reinicie o servidor'
@@ -619,8 +588,8 @@ app.post('/api/generate-and-export-3mf', async (req, res) => {
         hint = 'OpenSCAD não encontrado. Instale via: sudo apt install openscad (ou equivalente)'
       }
     }
-    
-    res.status(500).json({ 
+
+    res.status(500).json({
       error: 'Erro ao gerar arquivo 3MF',
       message: error.message,
       hint: hint
