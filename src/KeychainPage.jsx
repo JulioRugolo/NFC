@@ -1175,71 +1175,53 @@ ${trianglesXML}        </triangles>
             </div>
           </div>
 
-          <div className="form-actions">
+          <div className="form-actions keychain-form-actions-desktop">
             <button type="button" className="btn btn-primary" onClick={generate3MF}>
               📦 Gerar e Baixar Arquivo .3mf
             </button>
           </div>
-          <div style={{marginTop: '1rem', padding: '1rem', background: '#d1ecf1', border: '1px solid #bee5eb', borderRadius: '4px', fontSize: '0.9rem'}}>
+          <div className="keychain-help-box">
             <strong>💡 Como usar:</strong>
-            <ol style={{marginTop: '0.5rem', paddingLeft: '1.5rem', marginBottom: '0.5rem'}}>
+            <ol>
               <li>Preencha pelo menos o <strong>Nome Principal</strong> (obrigatório)</li>
-              <li>Ajuste os outros campos conforme sua preferência (valores padrão já estão configurados)</li>
-              <li>Clique em <strong>"Gerar e Baixar Arquivo .3mf"</strong></li>
-              <li>O sistema gerará o arquivo .3mf automaticamente e fará o download</li>
-              <li>Abra o arquivo .3mf no Bambu Studio ou outro software de impressão 3D</li>
+              <li>Ajuste os outros campos conforme sua preferência</li>
+              <li>Gere a visualização 3D e depois baixe o arquivo .3mf</li>
+              <li>Abra no Bambu Studio ou outro slicer</li>
             </ol>
           </div>
         </form>
         </div>
 
         <div className="keychain-viewer-column">
-            <div style={{ marginBottom: '1rem' }}>
-              <h2 style={{ fontSize: '1.3rem', margin: 0, marginBottom: '1rem' }}>👁️ Visualização 3D Interativa</h2>
+          <div className="keychain-viewer-panel">
+            <h2>👁️ Visualização 3D</h2>
+            <div className="keychain-viewer-actions-desktop">
               <button
                 type="button"
                 className="btn btn-primary"
                 onClick={generate3DModel}
                 disabled={isGenerating3D || !keychainConfig.name}
-                style={{ width: '100%' }}
+                style={{ width: '100%', marginBottom: '1rem' }}
               >
-                {isGenerating3D ? '⏳ Gerando modelo 3D...' : '🎮 Gerar Visualização 3D'}
+                {isGenerating3D ? '⏳ Gerando...' : '🎮 Gerar Visualização 3D'}
               </button>
             </div>
-            
+
             {stlData ? (
-              <div>
-                <Keychain3DViewer 
-                  baseStlData={stlData.base}
-                  textStlData={stlData.text}
-                  baseColor={keychainConfig.baseColor}
-                  textColor={keychainConfig.textColor}
-                />
-                <p style={{ marginTop: '0.5rem', fontSize: '0.9em', color: '#666', textAlign: 'center' }}>
-                  ✅ Modelo 3D gerado pelo OpenSCAD - Arraste para rotacionar e use o scroll para dar zoom!
-                </p>
-              </div>
+              <Keychain3DViewer
+                baseStlData={stlData.base}
+                textStlData={stlData.text}
+                baseColor={keychainConfig.baseColor}
+                textColor={keychainConfig.textColor}
+              />
             ) : (
-              <div style={{
-                width: '100%',
-                height: '500px',
-                border: '1px solid #ddd',
-                borderRadius: '8px',
-                background: '#f5f5f5',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: '#999'
-              }}>
-                <p>👁️ Visualização 3D aparecerá aqui</p>
-                <p style={{ fontSize: '0.9em', marginTop: '0.5rem' }}>Clique em "Gerar Visualização 3D" para ver o modelo</p>
-              </div>
+              <Keychain3DViewer />
             )}
           </div>
         </div>
+        </div>
 
-        <div style={{ marginTop: '2rem', marginBottom: '1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+        <div className="keychain-nav">
           <button onClick={() => navigate('/')} className="back-link">
             ← Voltar para a página principal
           </button>
@@ -1247,7 +1229,29 @@ ${trianglesXML}        </triangles>
             ⚙️ Ir para Configuração NFC
           </button>
         </div>
+
         <Footer />
+      </div>
+
+      <div className="keychain-sticky-bar">
+        <button
+          type="button"
+          className="btn btn-outline btn-secondary-action"
+          onClick={generate3DModel}
+          disabled={isGenerating3D || !keychainConfig.name}
+          title="Gerar visualização 3D"
+          aria-label="Gerar visualização 3D"
+        >
+          {isGenerating3D ? '⏳' : '🎮'}
+        </button>
+        <button
+          type="button"
+          className="btn btn-primary"
+          onClick={generate3MF}
+          disabled={!keychainConfig.name}
+        >
+          📦 Baixar .3mf
+        </button>
       </div>
     </div>
   )

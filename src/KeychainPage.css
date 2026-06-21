@@ -1,12 +1,11 @@
-/* KeychainPage - Estilos específicos para evitar conflitos */
+/* KeychainPage — mobile-first */
 
 .keychain-page {
   min-height: 100vh;
-  background: #f5f5f5;
+  min-height: 100dvh;
+  background: #f1f5f9;
   padding: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
+  padding-bottom: env(safe-area-inset-bottom, 0);
 }
 
 .keychain-container {
@@ -14,7 +13,8 @@
   width: 100%;
   background: white;
   min-height: 100vh;
-  padding: 24px 20px;
+  min-height: 100dvh;
+  padding: 1rem 1rem 5.5rem;
   box-sizing: border-box;
   margin: 0 auto;
 }
@@ -22,179 +22,228 @@
 .keychain-layout {
   display: flex;
   flex-direction: column;
-  gap: 2rem;
+  gap: 1.25rem;
+}
+
+/* Mobile: preview 3D no topo */
+.keychain-viewer-column {
+  order: -1;
 }
 
 .keychain-form-column {
   flex: 1;
 }
 
-.keychain-viewer-column {
-  flex: 1;
+.keychain-viewer-panel {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 1rem;
+}
+
+.keychain-viewer-panel h2 {
+  font-size: 1.1rem;
+  margin: 0 0 0.75rem;
+  color: #0f172a;
+  font-weight: 600;
 }
 
 .keychain-inputs-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1rem;
 }
 
 .keychain-input-small {
-  flex: 1 1 calc(33.333% - 1rem);
-  min-width: 120px;
+  min-width: 0;
 }
 
 .keychain-number-input {
   width: 100%;
-  max-width: 80px;
-  padding: 8px 10px;
-  border: 1px solid #e0e0e0;
-  border-radius: 6px;
-  font-size: 14px;
+  padding: 12px 10px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 16px;
   text-align: center;
   font-weight: 600;
+  background: #fff;
 }
 
 .keychain-header {
   text-align: center;
-  margin-bottom: 32px;
-  padding-bottom: 20px;
-  border-bottom: 1px solid #e0e0e0;
+  margin-bottom: 1.25rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #e2e8f0;
 }
 
 .keychain-header h1 {
-  margin: 0 0 8px 0;
-  color: #1a1a1a;
-  font-size: 24px;
-  font-weight: 600;
-  letter-spacing: -0.5px;
+  margin: 0 0 0.5rem;
+  color: #0f172a;
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
 }
 
 .keychain-header p {
   margin: 0;
-  color: #666;
-  font-size: 14px;
+  color: #64748b;
+  font-size: 0.9rem;
+  line-height: 1.45;
 }
 
 .keychain-form {
-  margin-bottom: 32px;
+  margin-bottom: 0;
 }
 
-/* Mobile First - Keychain */
-@media (max-width: 767px) {
-  .keychain-container {
-    padding: 20px 16px;
-  }
-
-  .keychain-header {
-    margin-bottom: 24px;
-    padding-bottom: 16px;
-  }
-
-  .keychain-header h1 {
-    font-size: 22px;
-  }
-
-  .keychain-form {
-    margin-bottom: 24px;
-  }
-
-  .keychain-layout {
-    flex-direction: column;
-  }
-
-  .keychain-input-small {
-    flex: 1 1 calc(50% - 0.5rem);
-    min-width: 100px;
-  }
-
-  .keychain-number-input {
-    max-width: 100%;
-  }
+.keychain-section-title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #64748b;
+  margin: 1.25rem 0 0.75rem;
+  padding-bottom: 0.35rem;
+  border-bottom: 1px solid #e2e8f0;
 }
 
-/* Tablet - Keychain */
-@media (min-width: 768px) and (max-width: 1023px) {
+.keychain-help-box {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 12px;
+  font-size: 0.875rem;
+  color: #1e3a5f;
+  line-height: 1.5;
+}
+
+.keychain-help-box ol {
+  margin: 0.5rem 0 0;
+  padding-left: 1.25rem;
+}
+
+.keychain-help-box li {
+  margin-bottom: 0.35rem;
+}
+
+.keychain-nav {
+  margin-top: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* Barra fixa no mobile — ações principais */
+.keychain-sticky-bar {
+  display: flex;
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 100;
+  gap: 0.5rem;
+  padding: 0.65rem 0.75rem;
+  padding-bottom: calc(0.65rem + env(safe-area-inset-bottom, 0));
+  background: rgba(255, 255, 255, 0.96);
+  border-top: 1px solid #e2e8f0;
+  box-shadow: 0 -4px 20px rgba(15, 23, 42, 0.08);
+  backdrop-filter: blur(10px);
+}
+
+.keychain-sticky-bar .btn {
+  flex: 1;
+  min-height: 48px;
+  justify-content: center;
+  font-size: 0.9rem;
+  padding: 0.75rem 0.5rem;
+}
+
+.keychain-sticky-bar .btn-secondary-action {
+  flex: 0 0 auto;
+  min-width: 48px;
+  padding-left: 0.85rem;
+  padding-right: 0.85rem;
+}
+
+/* Esconde botões duplicados no form quando sticky bar está visível */
+.keychain-form-actions-desktop {
+  display: none;
+}
+
+.keychain-viewer-actions-desktop {
+  display: none;
+}
+
+@media (min-width: 768px) {
   .keychain-page {
-    padding: 20px;
+    padding: 1.25rem;
   }
 
   .keychain-container {
-    max-width: 90%;
-    margin: 0 auto;
-    padding: 32px 40px;
-    border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    max-width: 96%;
+    padding: 2rem 2.5rem;
+    border-radius: 16px;
+    box-shadow: 0 4px 24px rgba(15, 23, 42, 0.08);
     min-height: auto;
-  }
-
-  .keychain-header h1 {
-    font-size: 28px;
+    padding-bottom: 2rem;
   }
 
   .keychain-layout {
     flex-direction: row;
     align-items: flex-start;
-  }
-
-  .keychain-form-column {
-    flex: 0 0 55%;
-    padding-right: 2rem;
+    gap: 2rem;
   }
 
   .keychain-viewer-column {
-    flex: 0 0 45%;
+    order: 0;
+    flex: 0 0 42%;
     position: sticky;
-    top: 20px;
+    top: 1.25rem;
   }
 
-  .keychain-input-small {
-    flex: 1 1 calc(33.333% - 1rem);
-  }
-}
-
-/* Desktop - Keychain */
-@media (min-width: 1024px) {
-  .keychain-page {
-    padding: 20px;
-  }
-
-  .keychain-container {
-    max-width: 1400px;
-    margin: 0 auto;
-    padding: 40px 60px;
-    border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    min-height: auto;
+  .keychain-form-column {
+    flex: 1;
   }
 
   .keychain-header h1 {
-    font-size: 32px;
+    font-size: 1.75rem;
   }
 
-  .keychain-header p {
-    font-size: 16px;
+  .keychain-inputs-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1rem;
+  }
+
+  .keychain-sticky-bar {
+    display: none;
+  }
+
+  .keychain-form-actions-desktop {
+    display: flex;
+  }
+
+  .keychain-viewer-actions-desktop {
+    display: block;
+  }
+}
+
+@media (min-width: 1024px) {
+  .keychain-container {
+    max-width: 1280px;
+    padding: 2.5rem 3rem;
   }
 
   .keychain-layout {
-    flex-direction: row;
-    align-items: flex-start;
     gap: 3rem;
   }
 
-  .keychain-form-column {
-    flex: 0 0 55%;
-    padding-right: 2rem;
-  }
-
   .keychain-viewer-column {
-    flex: 0 0 45%;
-    position: sticky;
-    top: 20px;
+    flex: 0 0 40%;
   }
 
-  .keychain-input-small {
-    flex: 1 1 calc(33.333% - 1rem);
+  .keychain-header h1 {
+    font-size: 2rem;
   }
 }

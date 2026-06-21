@@ -12,7 +12,9 @@
   width: 100%;
   background: white;
   min-height: 100vh;
-  padding: 24px 20px;
+  min-height: 100dvh;
+  padding: 1rem 1rem 2rem;
+  padding-bottom: calc(2rem + env(safe-area-inset-bottom, 0));
   box-sizing: border-box;
   margin: 0 auto;
 }
@@ -135,7 +137,8 @@
 
 .radio-group {
   display: flex;
-  gap: 16px;
+  flex-wrap: wrap;
+  gap: 0.75rem;
   margin-top: 8px;
 }
 
@@ -162,24 +165,38 @@
 
 .form-actions {
   display: flex;
-  justify-content: flex-end;
-  margin-top: 8px;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 1rem;
 }
 
 .btn {
-  padding: 12px 20px;
+  padding: 0.875rem 1.25rem;
   border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  font-size: 16px;
-  font-weight: 500;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
   font-family: inherit;
   background: white;
   color: #1a1a1a;
+  min-height: 48px;
+  width: 100%;
+}
+
+.btn:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #4a90e2 0%, #357abd 100%);
+  color: white;
+  border-color: #357abd;
 }
 
 .btn-clear {
@@ -234,7 +251,22 @@
 .url-actions {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 0.75rem;
+}
+
+@media (min-width: 768px) {
+  .form-actions {
+    flex-direction: row;
+    justify-content: flex-end;
+  }
+
+  .btn {
+    width: auto;
+  }
+
+  .url-actions {
+    flex-direction: row;
+  }
 }
 
 .btn-copy {

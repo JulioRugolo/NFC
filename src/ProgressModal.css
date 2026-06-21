@@ -188,6 +188,39 @@
 .step-label {
   color: #333;
   font-weight: 500;
+  font-size: 0.9rem;
+}
+
+@media (max-width: 767px) {
+  .modal-content {
+    width: calc(100% - 1.5rem);
+    max-height: calc(100dvh - 2rem);
+    border-radius: 16px;
+  }
+
+  .modal-header {
+    padding: 1rem 1.25rem;
+  }
+
+  .modal-header h2 {
+    font-size: 1.15rem;
+  }
+
+  .modal-body {
+    padding: 1.25rem;
+  }
+
+  .progress-steps {
+    gap: 0.65rem;
+  }
+
+  .step {
+    padding: 0.6rem;
+  }
+
+  .step-label {
+    font-size: 0.85rem;
+  }
 }
 
 .step.completed .step-label {

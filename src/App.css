@@ -487,189 +487,90 @@ footer {
   .app {
     overflow-y: auto;
     overflow-x: hidden;
+    min-height: 100dvh;
   }
 
   .container {
     min-height: 100vh;
+    min-height: 100dvh;
     height: auto;
     overflow: visible;
+    padding-bottom: env(safe-area-inset-bottom, 0);
   }
 
   header {
-    padding: 16px 12px;
+    padding: 1.25rem 1rem;
   }
 
   header h1.child-name {
-    font-size: 20px;
+    font-size: 1.35rem;
     flex-wrap: wrap;
     word-break: break-word;
     justify-content: center;
+    line-height: 1.25;
   }
 
   .header-subtitle {
-    font-size: 13px;
-    line-height: 1.4;
+    font-size: 0.875rem;
+    line-height: 1.45;
   }
 
   .address-text {
-    font-size: 12px;
+    font-size: 0.8125rem;
     word-break: break-word;
-    padding: 0 8px;
+    padding: 0 0.25rem;
   }
 
   .header-instruction {
-    font-size: 11px;
-    padding: 0 8px;
+    font-size: 0.8125rem;
+    padding: 0 0.25rem;
     line-height: 1.5;
   }
 
   .responsibles-section {
-    padding: 12px 10px;
-    padding-bottom: 8px;
+    padding: 1rem 0.75rem;
+    padding-bottom: 0.75rem;
   }
 
   .section-title {
-    font-size: 11px;
-    margin-bottom: 10px;
+    font-size: 0.75rem;
+    margin-bottom: 0.75rem;
   }
 
   .responsible-item {
-    padding: 10px;
-  }
-
-  .responsible-header {
-    flex-wrap: wrap;
-    gap: 4px;
-    margin-bottom: 8px;
-    padding-bottom: 8px;
-  }
-
-  .responsible-label {
-    font-size: 11px;
-    min-width: auto;
-  }
-
-  .responsible-name {
-    font-size: 14px;
-    word-break: break-word;
+    padding: 0.875rem;
   }
 
   .contact-section {
-    flex-direction: column;
-    gap: 12px;
-    align-items: stretch;
-  }
-
-  .contact-info {
-    gap: 6px;
-  }
-
-  .contact-name-row {
-    gap: 4px;
-  }
-
-  .contact-label {
-    font-size: 11px;
-  }
-
-  .contact-name {
-    font-size: 14px;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    align-items: center;
   }
 
   .contact-buttons {
     flex-direction: row;
-    gap: 10px;
-    width: 100%;
-    justify-content: flex-start;
-  }
-
-  .phone-number {
-    font-size: 12px;
-    padding: 5px 6px;
-    width: 100%;
-    text-align: left;
+    margin-left: auto;
   }
 
   .btn-icon {
-    min-width: 40px;
-    min-height: 40px;
-    width: 40px;
-    height: 40px;
-    padding: 8px;
-    font-size: 18px;
+    min-width: 48px;
+    min-height: 48px;
+    width: 48px;
+    height: 48px;
   }
 
-  .btn-phone-icon svg {
-    width: 18px;
-    height: 18px;
-  }
-
-  .btn-whatsapp-icon svg {
-    width: 20px;
-    height: 20px;
-  }
-
-  .btn {
-    padding: 10px 6px;
-    font-size: 11px;
-    min-height: 40px;
-    white-space: normal;
-    line-height: 1.2;
-  }
-
-  .btn-phone {
-    font-size: 10px;
-  }
-
-  .btn-whatsapp {
-    font-size: 11px;
+  .phone-number {
+    font-size: 0.875rem;
+    padding: 0.5rem 0.625rem;
   }
 
   .btn-instagram-small {
-    font-size: 11px;
-    padding: 8px;
+    font-size: 0.875rem;
+    padding: 0.75rem;
     width: 100%;
-    margin-top: 8px;
-  }
-
-  footer,
-  .app-footer {
-    padding: 0.75rem 0.75rem !important;
-  }
-
-  .brand-section {
-    gap: 10px;
-  }
-
-  .brand-info {
-    padding-bottom: 10px;
-  }
-
-  .brand-info h3 {
-    font-size: 16px;
-    letter-spacing: 1px;
-  }
-
-  .brand-tagline {
-    font-size: 9px;
-  }
-
-  .brand-contact {
-    grid-template-columns: 1fr;
-    gap: 8px;
-  }
-
-  .contact-btn {
-    padding: 10px 8px;
-    gap: 3px;
-  }
-
-  .contact-label {
-    font-size: 9px;
-  }
-
-  .contact-phone {
-    font-size: 11px;
+    margin-top: 0.5rem;
+    min-height: 44px;
   }
 }
 
@@ -1048,37 +949,51 @@ footer {
 
 /* Home Page - Mobile */
 @media (max-width: 767px) {
+  .home-page {
+    min-height: 100dvh;
+  }
+
   .home-header {
-    padding: 2rem 1.5rem 1.5rem;
+    padding: 2rem 1.25rem 1.25rem;
+    padding-top: calc(1.5rem + env(safe-area-inset-top, 0));
   }
 
   .home-title {
-    font-size: 2rem;
+    font-size: 1.75rem;
   }
 
   .home-subtitle {
-    font-size: 1rem;
+    font-size: 0.95rem;
   }
 
   .home-content {
-    padding: 1.5rem;
+    padding: 1rem 1.25rem 1.5rem;
   }
 
   .home-cards {
     grid-template-columns: 1fr;
-    gap: 1.5rem;
+    gap: 1rem;
   }
 
   .home-card {
-    padding: 1.5rem;
+    padding: 1.35rem;
+    border-radius: 14px;
+  }
+
+  .home-card:active {
+    transform: scale(0.99);
   }
 
   .card-icon {
-    font-size: 2.5rem;
+    font-size: 2.25rem;
   }
 
   .card-title {
-    font-size: 1.3rem;
+    font-size: 1.2rem;
+  }
+
+  .card-description {
+    font-size: 0.9rem;
   }
 }
 

@@ -1,0 +1,88 @@
+.viewer-3d {
+  width: 100%;
+  height: min(50vh, 360px);
+  min-height: 260px;
+  border: 1px solid #dde3ea;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%);
+  position: relative;
+  overflow: hidden;
+  cursor: grab;
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.viewer-3d:active {
+  cursor: grabbing;
+}
+
+.viewer-3d canvas {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.viewer-3d--loading,
+.viewer-3d--empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  color: #64748b;
+  text-align: center;
+  padding: 1.5rem;
+}
+
+.viewer-3d--empty p {
+  margin: 0;
+}
+
+.viewer-3d--empty .viewer-empty-hint {
+  font-size: 0.875rem;
+  color: #94a3b8;
+}
+
+.viewer-hint {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  right: 10px;
+  background: rgba(15, 23, 42, 0.72);
+  color: white;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  line-height: 1.35;
+  z-index: 10;
+  pointer-events: none;
+  text-align: center;
+}
+
+.viewer-hint-desktop {
+  display: none;
+}
+
+.viewer-caption {
+  margin-top: 0.75rem;
+  font-size: 0.875rem;
+  color: #64748b;
+  text-align: center;
+  line-height: 1.4;
+}
+
+@media (min-width: 768px) {
+  .viewer-3d {
+    height: 420px;
+    min-height: 420px;
+  }
+
+  .viewer-hint-mobile {
+    display: none;
+  }
+
+  .viewer-hint-desktop {
+    display: block;
+  }
+}

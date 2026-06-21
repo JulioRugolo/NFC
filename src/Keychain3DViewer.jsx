@@ -1,17 +1,16 @@
 import { useEffect, useRef } from 'react'
 import * as THREE from 'three'
+import './Keychain3DViewer.css'
 
-// STL Loader para formato ASCII
 function parseSTL(stlString) {
   const lines = stlString.split('\n')
   const vertices = []
   const normals = []
   let currentNormal = null
-  let vertexCount = 0
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i].trim()
-    
+
     if (line.startsWith('facet normal')) {
       const parts = line.split(/\s+/)
       if (parts.length >= 5) {
@@ -27,16 +26,13 @@ function parseSTL(stlString) {
         const x = parseFloat(parts[1])
         const y = parseFloat(parts[2])
         const z = parseFloat(parts[3])
-        
+
         if (!isNaN(x) && !isNaN(y) && !isNaN(z)) {
           vertices.push(x, y, z)
-          vertexCount++
-          
-          // Adiciona normal para cada vértice
           if (currentNormal) {
             normals.push(currentNormal.x, currentNormal.y, currentNormal.z)
           } else {
-            normals.push(0, 0, 1) // Normal padrão
+            normals.push(0, 0, 1)
           }
         }
       }
@@ -45,7 +41,7 @@ function parseSTL(stlString) {
     }
   }
 
-  return { vertices, normals, vertexCount }
+  return { vertices, normals }
 }
 
 export default function Keychain3DViewer({ stlData, baseStlData, textStlData, baseColor = '#4a90e2', textColor = '#ffffff' }) {
@@ -57,36 +53,29 @@ export default function Keychain3DViewer({ stlData, baseStlData, textStlData, ba
   const textMeshRef = useRef(null)
 
   useEffect(() => {
-    // Suporta tanto o formato antigo (stlData) quanto o novo (baseStlData/textStlData)
     let baseStl = null
     let textStl = null
-    
+
     if (stlData && typeof stlData === 'object' && stlData.base && stlData.text) {
-      // Formato antigo: objeto com base e text
       baseStl = stlData.base
       textStl = stlData.text
     } else if (baseStlData && textStlData) {
-      // Formato novo: props separadas
       baseStl = baseStlData
       textStl = textStlData
     }
-    
+
     if (!baseStl || !textStl || !containerRef.current) return
 
-    // Limpa o container antes de criar novo modelo
-    if (containerRef.current.firstChild) {
-      containerRef.current.innerHTML = ''
-    }
+    const container = containerRef.current
+    container.innerHTML = ''
 
-    // Cria a cena
     const scene = new THREE.Scene()
-    scene.background = new THREE.Color(0xf5f5f5)
+    scene.background = new THREE.Color(0xf1f5f9)
     sceneRef.current = scene
 
-    // Câmera
     const camera = new THREE.PerspectiveCamera(
       50,
-      containerRef.current.clientWidth / containerRef.current.clientHeight,
+      container.clientWidth / Math.max(container.clientHeight, 1),
       0.1,
       1000
     )
@@ -94,138 +83,99 @@ export default function Keychain3DViewer({ stlData, baseStlData, textStlData, ba
     camera.lookAt(0, 0, 0)
     cameraRef.current = camera
 
-    // Renderer
-    const renderer = new THREE.WebGLRenderer({ antialias: true })
-    renderer.setSize(containerRef.current.clientWidth, containerRef.current.clientHeight)
-    renderer.setPixelRatio(window.devicePixelRatio)
-    containerRef.current.appendChild(renderer.domElement)
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false })
+    renderer.setSize(container.clientWidth, container.clientHeight)
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+    container.appendChild(renderer.domElement)
     rendererRef.current = renderer
 
-    // Iluminação
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6)
-    scene.add(ambientLight)
+    scene.add(new THREE.AmbientLight(0xffffff, 0.65))
 
-    const directionalLight1 = new THREE.DirectionalLight(0xffffff, 0.8)
-    directionalLight1.position.set(10, 10, 5)
-    scene.add(directionalLight1)
+    const light1 = new THREE.DirectionalLight(0xffffff, 0.85)
+    light1.position.set(10, 10, 5)
+    scene.add(light1)
 
-    const directionalLight2 = new THREE.DirectionalLight(0xffffff, 0.4)
-    directionalLight2.position.set(-10, -10, -5)
-    scene.add(directionalLight2)
+    const light2 = new THREE.DirectionalLight(0xffffff, 0.45)
+    light2.position.set(-10, -8, -5)
+    scene.add(light2)
 
-    // Carrega os modelos STL (base e texto separados)
     try {
-      // Carrega STL da base
       const baseData = parseSTL(baseStl)
-      if (baseData.vertices.length === 0) {
-        throw new Error('STL da base vazio ou formato inválido')
+      const textData = parseSTL(textStl)
+
+      if (baseData.vertices.length === 0 || textData.vertices.length === 0) {
+        throw new Error('STL vazio ou formato inválido')
       }
 
       const baseGeometry = new THREE.BufferGeometry()
       baseGeometry.setAttribute('position', new THREE.Float32BufferAttribute(baseData.vertices, 3))
-      
       if (baseData.normals.length > 0) {
         baseGeometry.setAttribute('normal', new THREE.Float32BufferAttribute(baseData.normals, 3))
       } else {
         baseGeometry.computeVertexNormals()
       }
 
-      // Carrega STL do texto
-      const textData = parseSTL(textStl)
-      if (textData.vertices.length === 0) {
-        throw new Error('STL do texto vazio ou formato inválido')
-      }
-
       const textGeometry = new THREE.BufferGeometry()
       textGeometry.setAttribute('position', new THREE.Float32BufferAttribute(textData.vertices, 3))
-      
       if (textData.normals.length > 0) {
         textGeometry.setAttribute('normal', new THREE.Float32BufferAttribute(textData.normals, 3))
       } else {
         textGeometry.computeVertexNormals()
       }
 
-      // Calcula o centro combinado de ambos os modelos
       const combinedBox = new THREE.Box3()
       baseGeometry.computeBoundingBox()
       textGeometry.computeBoundingBox()
       combinedBox.union(baseGeometry.boundingBox)
       combinedBox.union(textGeometry.boundingBox)
-      
+
       const center = new THREE.Vector3()
       combinedBox.getCenter(center)
-      
       baseGeometry.translate(-center.x, -center.y, -center.z)
       textGeometry.translate(-center.x, -center.y, -center.z)
 
-      // Material da base
-      const baseColorHex = baseColor.replace('#', '0x')
       const baseMaterial = new THREE.MeshStandardMaterial({
-        color: parseInt(baseColorHex, 16),
-        metalness: 0.3,
-        roughness: 0.7
+        color: parseInt(baseColor.replace('#', '0x'), 16),
+        metalness: 0.25,
+        roughness: 0.75
       })
 
-      // Material do texto
-      const textColorHex = textColor.replace('#', '0x')
       const textMaterial = new THREE.MeshStandardMaterial({
-        color: parseInt(textColorHex, 16),
-        metalness: 0.3,
-        roughness: 0.7
+        color: parseInt(textColor.replace('#', '0x'), 16),
+        metalness: 0.25,
+        roughness: 0.75
       })
 
-      // Cria os meshes
       const baseMesh = new THREE.Mesh(baseGeometry, baseMaterial)
       const textMesh = new THREE.Mesh(textGeometry, textMaterial)
-      
       scene.add(baseMesh)
       scene.add(textMesh)
-      
       baseMeshRef.current = baseMesh
       textMeshRef.current = textMesh
 
-      // Ajusta a câmera para mostrar todo o modelo
       const box = new THREE.Box3().setFromObject(baseMesh).union(new THREE.Box3().setFromObject(textMesh))
       const size = box.getSize(new THREE.Vector3())
       const maxDim = Math.max(size.x, size.y, size.z)
       const fov = camera.fov * (Math.PI / 180)
-      let cameraZ = Math.abs(maxDim / 2 / Math.tan(fov / 2))
-      cameraZ *= 1.5 // Adiciona um pouco de espaço
+      const cameraZ = Math.abs(maxDim / 2 / Math.tan(fov / 2)) * 1.55
       camera.position.set(0, 0, cameraZ)
       camera.lookAt(0, 0, 0)
-
     } catch (error) {
       console.error('Erro ao carregar STL:', error)
-      // Mostra mensagem de erro na tela
       const errorDiv = document.createElement('div')
-      errorDiv.style.cssText = 'position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: red; text-align: center;'
+      errorDiv.className = 'viewer-3d--loading'
       errorDiv.textContent = `Erro ao carregar modelo: ${error.message}`
-      containerRef.current.appendChild(errorDiv)
+      container.appendChild(errorDiv)
     }
 
-    // Controles de rotação simples (mouse)
     let isDragging = false
-    let previousMousePosition = { x: 0, y: 0 }
+    let previousPointer = { x: 0, y: 0 }
     let rotationX = 0
     let rotationY = 0
+    let pinchStartDistance = 0
+    let pinchStartCameraZ = camera.position.z
 
-    const onMouseDown = (e) => {
-      isDragging = true
-      previousMousePosition = { x: e.clientX, y: e.clientY }
-      containerRef.current.style.cursor = 'grabbing'
-    }
-
-    const onMouseMove = (e) => {
-      if (!isDragging || (!baseMeshRef.current && !textMeshRef.current)) return
-
-      const deltaMove = {
-        x: e.clientX - previousMousePosition.x,
-        y: e.clientY - previousMousePosition.y
-      }
-
-      rotationY += deltaMove.x * 0.01
-      rotationX += deltaMove.y * 0.01
-
+    const applyRotation = () => {
       if (baseMeshRef.current) {
         baseMeshRef.current.rotation.y = rotationY
         baseMeshRef.current.rotation.x = rotationX
@@ -234,125 +184,170 @@ export default function Keychain3DViewer({ stlData, baseStlData, textStlData, ba
         textMeshRef.current.rotation.y = rotationY
         textMeshRef.current.rotation.x = rotationX
       }
-
-      previousMousePosition = {
-        x: e.clientX,
-        y: e.clientY
-      }
     }
 
-    const onMouseUp = () => {
+    const clampZoom = (z) => Math.max(8, Math.min(250, z))
+
+    const getTouchDistance = (touches) => {
+      const dx = touches[0].clientX - touches[1].clientX
+      const dy = touches[0].clientY - touches[1].clientY
+      return Math.hypot(dx, dy)
+    }
+
+    const onPointerDown = (x, y) => {
+      isDragging = true
+      previousPointer = { x, y }
+      container.style.cursor = 'grabbing'
+    }
+
+    const onPointerMove = (x, y) => {
+      if (!isDragging || (!baseMeshRef.current && !textMeshRef.current)) return
+
+      const deltaMove = { x: x - previousPointer.x, y: y - previousPointer.y }
+      rotationY += deltaMove.x * 0.012
+      rotationX += deltaMove.y * 0.012
+      rotationX = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, rotationX))
+      applyRotation()
+      previousPointer = { x, y }
+    }
+
+    const onPointerUp = () => {
       isDragging = false
-      containerRef.current.style.cursor = 'grab'
+      container.style.cursor = 'grab'
     }
 
+    const onMouseDown = (e) => onPointerDown(e.clientX, e.clientY)
+    const onMouseMove = (e) => onPointerMove(e.clientX, e.clientY)
     const onWheel = (e) => {
       e.preventDefault()
-      camera.position.z += e.deltaY * 0.1
-      camera.position.z = Math.max(10, Math.min(200, camera.position.z))
+      camera.position.z = clampZoom(camera.position.z + e.deltaY * 0.08)
       camera.lookAt(0, 0, 0)
     }
 
-    renderer.domElement.addEventListener('mousedown', onMouseDown)
-    renderer.domElement.addEventListener('mousemove', onMouseMove)
-    renderer.domElement.addEventListener('mouseup', onMouseUp)
-    renderer.domElement.addEventListener('mouseleave', onMouseUp)
-    renderer.domElement.addEventListener('wheel', onWheel)
+    const onTouchStart = (e) => {
+      if (e.touches.length === 1) {
+        onPointerDown(e.touches[0].clientX, e.touches[0].clientY)
+      } else if (e.touches.length === 2) {
+        isDragging = false
+        pinchStartDistance = getTouchDistance(e.touches)
+        pinchStartCameraZ = camera.position.z
+      }
+    }
 
-    // Animação
+    const onTouchMove = (e) => {
+      e.preventDefault()
+      if (e.touches.length === 1 && isDragging) {
+        onPointerMove(e.touches[0].clientX, e.touches[0].clientY)
+      } else if (e.touches.length === 2) {
+        const distance = getTouchDistance(e.touches)
+        if (pinchStartDistance > 0) {
+          const scale = pinchStartDistance / distance
+          camera.position.z = clampZoom(pinchStartCameraZ * scale)
+          camera.lookAt(0, 0, 0)
+        }
+      }
+    }
+
+    const onTouchEnd = (e) => {
+      if (e.touches.length === 0) {
+        onPointerUp()
+        pinchStartDistance = 0
+      } else if (e.touches.length === 1) {
+        isDragging = true
+        previousPointer = { x: e.touches[0].clientX, y: e.touches[0].clientY }
+        pinchStartDistance = 0
+      }
+    }
+
+    const canvas = renderer.domElement
+    canvas.addEventListener('mousedown', onMouseDown)
+    canvas.addEventListener('mousemove', onMouseMove)
+    canvas.addEventListener('mouseup', onPointerUp)
+    canvas.addEventListener('mouseleave', onPointerUp)
+    canvas.addEventListener('wheel', onWheel, { passive: false })
+    canvas.addEventListener('touchstart', onTouchStart, { passive: true })
+    canvas.addEventListener('touchmove', onTouchMove, { passive: false })
+    canvas.addEventListener('touchend', onTouchEnd, { passive: true })
+    canvas.addEventListener('touchcancel', onTouchEnd, { passive: true })
+
+    let animationId = 0
     const animate = () => {
-      requestAnimationFrame(animate)
+      animationId = requestAnimationFrame(animate)
       renderer.render(scene, camera)
     }
     animate()
 
-    // Ajusta câmera quando redimensiona
     const handleResize = () => {
       if (!containerRef.current) return
-      camera.aspect = containerRef.current.clientWidth / containerRef.current.clientHeight
+      const w = containerRef.current.clientWidth
+      const h = containerRef.current.clientHeight
+      if (w === 0 || h === 0) return
+      camera.aspect = w / h
       camera.updateProjectionMatrix()
-      renderer.setSize(containerRef.current.clientWidth, containerRef.current.clientHeight)
+      renderer.setSize(w, h)
     }
+
+    const resizeObserver = new ResizeObserver(handleResize)
+    resizeObserver.observe(container)
     window.addEventListener('resize', handleResize)
 
-    // Cleanup
     return () => {
+      cancelAnimationFrame(animationId)
+      resizeObserver.disconnect()
       window.removeEventListener('resize', handleResize)
-      renderer.domElement.removeEventListener('mousedown', onMouseDown)
-      renderer.domElement.removeEventListener('mousemove', onMouseMove)
-      renderer.domElement.removeEventListener('mouseup', onMouseUp)
-      renderer.domElement.removeEventListener('mouseleave', onMouseUp)
-      renderer.domElement.removeEventListener('wheel', onWheel)
-      
-      if (containerRef.current && renderer.domElement.parentNode) {
-        containerRef.current.removeChild(renderer.domElement)
+      canvas.removeEventListener('mousedown', onMouseDown)
+      canvas.removeEventListener('mousemove', onMouseMove)
+      canvas.removeEventListener('mouseup', onPointerUp)
+      canvas.removeEventListener('mouseleave', onPointerUp)
+      canvas.removeEventListener('wheel', onWheel)
+      canvas.removeEventListener('touchstart', onTouchStart)
+      canvas.removeEventListener('touchmove', onTouchMove)
+      canvas.removeEventListener('touchend', onTouchEnd)
+      canvas.removeEventListener('touchcancel', onTouchEnd)
+
+      if (container.contains(canvas)) {
+        container.removeChild(canvas)
       }
       renderer.dispose()
+      baseMeshRef.current = null
+      textMeshRef.current = null
     }
   }, [stlData, baseStlData, textStlData, baseColor, textColor])
 
-  // Atualiza cores quando mudarem (sem recriar o modelo)
   useEffect(() => {
-    if (baseMeshRef.current && baseMeshRef.current.material) {
-      const baseColorHex = baseColor.replace('#', '0x')
-      baseMeshRef.current.material.color.setHex(parseInt(baseColorHex, 16))
+    if (baseMeshRef.current?.material) {
+      baseMeshRef.current.material.color.setHex(parseInt(baseColor.replace('#', '0x'), 16))
     }
-    if (textMeshRef.current && textMeshRef.current.material) {
-      const textColorHex = textColor.replace('#', '0x')
-      textMeshRef.current.material.color.setHex(parseInt(textColorHex, 16))
+    if (textMeshRef.current?.material) {
+      textMeshRef.current.material.color.setHex(parseInt(textColor.replace('#', '0x'), 16))
     }
   }, [baseColor, textColor])
 
-  // Verifica se tem dados para exibir (suporta ambos os formatos)
-  const hasData = (stlData && typeof stlData === 'object' && stlData.base && stlData.text) || 
-                 (baseStlData && textStlData)
-  
+  const hasData = (stlData && typeof stlData === 'object' && stlData.base && stlData.text) ||
+    (baseStlData && textStlData)
+
   if (!hasData) {
     return (
-      <div style={{
-        width: '100%',
-        height: '400px',
-        border: '1px solid #ddd',
-        borderRadius: '8px',
-        background: '#f5f5f5',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        color: '#999'
-      }}>
-        Carregando modelo 3D...
+      <div className="viewer-3d viewer-3d--empty">
+        <p>👁️ Visualização 3D</p>
+        <p className="viewer-empty-hint">Toque em &quot;Gerar Visualização 3D&quot; para ver o modelo</p>
       </div>
     )
   }
 
   return (
-    <div
-      ref={containerRef}
-      style={{
-        width: '100%',
-        height: '500px',
-        border: '1px solid #ddd',
-        borderRadius: '8px',
-        background: '#f5f5f5',
-        position: 'relative',
-        cursor: 'grab',
-        overflow: 'hidden'
-      }}
-    >
-      <div style={{
-        position: 'absolute',
-        top: '10px',
-        left: '10px',
-        background: 'rgba(0,0,0,0.6)',
-        color: 'white',
-        padding: '5px 10px',
-        borderRadius: '4px',
-        fontSize: '0.85em',
-        zIndex: 10,
-        pointerEvents: 'none'
-      }}>
-        🖱️ Arraste para rotacionar • 🖱️ Scroll para zoom
+    <div className="viewer-3d-wrap">
+      <div ref={containerRef} className="viewer-3d">
+        <div className="viewer-hint viewer-hint-mobile">
+          👆 Um dedo: girar &nbsp;•&nbsp; 🤏 Dois dedos: zoom
+        </div>
+        <div className="viewer-hint viewer-hint-desktop">
+          🖱️ Arraste para rotacionar &nbsp;•&nbsp; Scroll para zoom
+        </div>
       </div>
+      <p className="viewer-caption">
+        Modelo gerado pelo OpenSCAD — gire para ver todos os lados
+      </p>
     </div>
   )
 }
