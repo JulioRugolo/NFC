@@ -37,6 +37,7 @@ function KeychainPage() {
   const [previewImage, setPreviewImage] = useState(null)
   const [isGeneratingPreview, setIsGeneratingPreview] = useState(false)
   const [stlData, setStlData] = useState(null)
+  const [exportCache, setExportCache] = useState(null) // { blob, filename }
   const [isGenerating3D, setIsGenerating3D] = useState(false)
   const [progress, setProgress] = useState(0)
   const [progressMessage, setProgressMessage] = useState('')
@@ -58,11 +59,25 @@ function KeychainPage() {
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target
-    
+
+    setStlData(null)
+    setExportCache(null)
+
     setKeychainConfig(prev => ({
       ...prev,
       [name]: type === 'checkbox' ? checked : (type === 'number' ? parseFloat(value) || 0 : value)
     }))
+  }
+
+  const triggerFileDownload = (blob, filename) => {
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = filename
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
   }
 
   const startProgressSimulation = (maxWhileWaiting = 88, intervalMs = 400) => {
@@ -281,6 +296,7 @@ keychain(name, line2, fontSize, thickness, textThickness, keychainHoleSize, keyc
 
       setIsGenerating3D(true)
       setStlData(null)
+      setExportCache(null)
       setProgress(0)
       setProgressMessage('Iniciando geração do modelo...')
       setShowProgressModal(true)
@@ -328,16 +344,40 @@ keychain(name, line2, fontSize, thickness, textThickness, keychainHoleSize, keyc
       setProgressMessage('Processando modelos...')
 
       if (data.success && data.baseStl && data.textStl) {
-        // Decodifica os STLs de base64 para string
         const baseStlString = atob(data.baseStl)
         const textStlString = atob(data.textStl)
         setStlData({ base: baseStlString, text: textStlString })
-        
+
+        setProgress(85)
+        setProgressMessage('Gerando arquivo .3mf...')
+
+        const exportResponse = await fetch(`${API_URL}/api/generate-and-export-3mf`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(keychainConfig)
+        })
+
+        if (!exportResponse.ok) {
+          const errorText = await exportResponse.text()
+          let errorMessage = 'Erro ao gerar arquivo 3MF'
+          try {
+            const error = JSON.parse(errorText)
+            errorMessage = error.message || error.error || errorMessage
+          } catch {
+            errorMessage = errorText || errorMessage
+          }
+          throw new Error(errorMessage)
+        }
+
+        const blob = await exportResponse.blob()
+        const fallbackName = `keychain_${keychainConfig.name.replace(/\s+/g, '_') || 'personalizado'}`
+        const filename = parseDownloadFilename(exportResponse, fallbackName)
+        setExportCache({ blob, filename })
+
         clearInterval(progressInterval)
         setProgress(100)
-        setProgressMessage('Modelo gerado com sucesso!')
+        setProgressMessage('Visualização e arquivo prontos!')
         
-        // Fecha o modal após 0.5 segundo
         setTimeout(() => {
           setShowProgressModal(false)
           setProgress(0)
@@ -408,90 +448,16 @@ keychain(name, line2, fontSize, thickness, textThickness, keychainHoleSize, keyc
     }
   }
 
-  const generate3MF = async () => {
-    let progressInterval = null
-    try {
-      if (!keychainConfig.name) {
-        alert('Por favor, preencha o nome do chaveiro primeiro!')
-        return
-      }
-
-      setProgress(0)
-      setProgressMessage('Iniciando exportação...')
-      setShowProgressModal(true)
-
-      const API_URL = import.meta.env.VITE_API_URL || 
-        (import.meta.env.PROD ? window.location.origin : 'http://localhost:3001')
-      
-      progressInterval = startProgressSimulation(88)
-
-      setProgress(10)
-      setProgressMessage('Renderizando no OpenSCAD (~20s)...')
-
-      const response = await fetch(`${API_URL}/api/generate-and-export-3mf`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(keychainConfig)
-      })
-
-      clearInterval(progressInterval)
-      setProgress(92)
-      setProgressMessage('Preparando download...')
-
-      if (!response.ok) {
-        let errorMessage = 'Erro ao gerar arquivo 3MF'
-        let errorHint = ''
-        
-        const errorText = await response.text()
-        
-        try {
-          const error = JSON.parse(errorText)
-          errorMessage = error.message || error.error || errorMessage
-          errorHint = error.hint || ''
-        } catch (e) {
-          errorMessage = errorText || errorMessage
-        }
-        
-        setShowProgressModal(false)
-        throw new Error(errorMessage + (errorHint ? `\n\n${errorHint}` : ''))
-      }
-
-      const blob = await response.blob()
-      const fallbackName = `keychain_${keychainConfig.name.replace(/\s+/g, '_') || 'personalizado'}`
-      const filename = parseDownloadFilename(response, fallbackName)
-
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = filename
-      document.body.appendChild(a)
-      a.click()
-      document.body.removeChild(a)
-      URL.revokeObjectURL(url)
-      
-      setProgress(100)
-      setProgressMessage(`Arquivo ${filename.endsWith('.stl') ? 'STL' : '3MF'} baixado!`)
-      
-      setTimeout(() => {
-        setShowProgressModal(false)
-        setProgress(0)
-        setProgressMessage('')
-      }, 500)
-      
-    } catch (error) {
-      console.error('Erro ao gerar 3MF:', error)
-      setShowProgressModal(false)
-      
-      if (error.message.includes('fetch') || error.message.includes('Failed to fetch')) {
-        alert('⚠️ Servidor backend não está rodando!\n\nPara gerar o arquivo 3MF:\n1. Execute: npm run server\n2. Ou use o arquivo .scad no OpenSCAD')
-      } else {
-        alert(`Erro ao gerar arquivo 3MF: ${error.message}\n\nCertifique-se de que o OpenSCAD está instalado.`)
-      }
-    } finally {
-      if (progressInterval) clearInterval(progressInterval)
+  const download3MF = () => {
+    if (!keychainConfig.name) {
+      alert('Por favor, preencha o nome do chaveiro primeiro!')
+      return
     }
+    if (!exportCache) {
+      alert('Gere a visualização 3D primeiro — o arquivo .3mf será preparado automaticamente.')
+      return
+    }
+    triggerFileDownload(exportCache.blob, exportCache.filename)
   }
 
   // Função antiga (mantida como fallback, mas não será usada se o backend funcionar)
@@ -1175,17 +1141,12 @@ ${trianglesXML}        </triangles>
             </div>
           </div>
 
-          <div className="form-actions keychain-form-actions-desktop">
-            <button type="button" className="btn btn-primary" onClick={generate3MF}>
-              📦 Gerar e Baixar Arquivo .3mf
-            </button>
-          </div>
           <div className="keychain-help-box">
             <strong>💡 Como usar:</strong>
             <ol>
               <li>Preencha pelo menos o <strong>Nome Principal</strong> (obrigatório)</li>
-              <li>Ajuste os outros campos conforme sua preferência</li>
-              <li>Gere a visualização 3D e depois baixe o arquivo .3mf</li>
+              <li>Ajuste os campos e toque em <strong>Gerar visualização</strong></li>
+              <li>Depois toque em <strong>Baixar .3mf</strong> (download instantâneo)</li>
               <li>Abra no Bambu Studio ou outro slicer</li>
             </ol>
           </div>
@@ -1195,17 +1156,6 @@ ${trianglesXML}        </triangles>
         <div className="keychain-viewer-column">
           <div className="keychain-viewer-panel">
             <h2>👁️ Visualização 3D</h2>
-            <div className="keychain-viewer-actions-desktop">
-              <button
-                type="button"
-                className="btn btn-primary"
-                onClick={generate3DModel}
-                disabled={isGenerating3D || !keychainConfig.name}
-                style={{ width: '100%', marginBottom: '1rem' }}
-              >
-                {isGenerating3D ? '⏳ Gerando...' : '🎮 Gerar Visualização 3D'}
-              </button>
-            </div>
 
             {stlData ? (
               <Keychain3DViewer
@@ -1216,6 +1166,29 @@ ${trianglesXML}        </triangles>
               />
             ) : (
               <Keychain3DViewer />
+            )}
+
+            <div className="keychain-viewer-actions">
+              <button
+                type="button"
+                className="btn btn-outline"
+                onClick={generate3DModel}
+                disabled={isGenerating3D || !keychainConfig.name}
+              >
+                {isGenerating3D ? '⏳ Gerando...' : stlData ? '🔄 Atualizar visualização' : '🎮 Gerar visualização'}
+              </button>
+              <button
+                type="button"
+                className="btn btn-primary"
+                onClick={download3MF}
+                disabled={!exportCache || isGenerating3D}
+              >
+                📦 Baixar .3mf
+              </button>
+            </div>
+
+            {exportCache && (
+              <p className="keychain-ready-hint">✅ Arquivo .3mf pronto — toque em baixar quando quiser</p>
             )}
           </div>
         </div>
@@ -1231,27 +1204,6 @@ ${trianglesXML}        </triangles>
         </div>
 
         <Footer />
-      </div>
-
-      <div className="keychain-sticky-bar">
-        <button
-          type="button"
-          className="btn btn-outline btn-secondary-action"
-          onClick={generate3DModel}
-          disabled={isGenerating3D || !keychainConfig.name}
-          title="Gerar visualização 3D"
-          aria-label="Gerar visualização 3D"
-        >
-          {isGenerating3D ? '⏳' : '🎮'}
-        </button>
-        <button
-          type="button"
-          className="btn btn-primary"
-          onClick={generate3MF}
-          disabled={!keychainConfig.name}
-        >
-          📦 Baixar .3mf
-        </button>
       </div>
     </div>
   )

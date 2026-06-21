@@ -14,7 +14,7 @@
   background: white;
   min-height: 100vh;
   min-height: 100dvh;
-  padding: 1rem 1rem 5.5rem;
+  padding: 1rem 1rem 1.5rem;
   box-sizing: border-box;
   margin: 0 auto;
 }
@@ -135,45 +135,30 @@
   gap: 0.5rem;
 }
 
-/* Barra fixa no mobile — ações principais */
-.keychain-sticky-bar {
+/* Ações do viewer — lado a lado, labels claros */
+.keychain-viewer-actions {
   display: flex;
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 100;
-  gap: 0.5rem;
-  padding: 0.65rem 0.75rem;
-  padding-bottom: calc(0.65rem + env(safe-area-inset-bottom, 0));
-  background: rgba(255, 255, 255, 0.96);
-  border-top: 1px solid #e2e8f0;
-  box-shadow: 0 -4px 20px rgba(15, 23, 42, 0.08);
-  backdrop-filter: blur(10px);
+  flex-direction: row;
+  gap: 0.625rem;
+  margin-top: 1rem;
 }
 
-.keychain-sticky-bar .btn {
+.keychain-viewer-actions .btn {
   flex: 1;
-  min-height: 48px;
-  justify-content: center;
-  font-size: 0.9rem;
-  padding: 0.75rem 0.5rem;
+  width: auto;
+  min-width: 0;
+  min-height: 46px;
+  padding: 0.65rem 0.5rem;
+  font-size: 0.8125rem;
+  line-height: 1.2;
 }
 
-.keychain-sticky-bar .btn-secondary-action {
-  flex: 0 0 auto;
-  min-width: 48px;
-  padding-left: 0.85rem;
-  padding-right: 0.85rem;
-}
-
-/* Esconde botões duplicados no form quando sticky bar está visível */
-.keychain-form-actions-desktop {
-  display: none;
-}
-
-.keychain-viewer-actions-desktop {
-  display: none;
+.keychain-ready-hint {
+  margin: 0.75rem 0 0;
+  font-size: 0.8125rem;
+  color: #15803d;
+  text-align: center;
+  line-height: 1.4;
 }
 
 @media (min-width: 768px) {
@@ -216,16 +201,9 @@
     gap: 1rem;
   }
 
-  .keychain-sticky-bar {
-    display: none;
-  }
-
-  .keychain-form-actions-desktop {
-    display: flex;
-  }
-
-  .keychain-viewer-actions-desktop {
-    display: block;
+  .keychain-viewer-actions .btn {
+    font-size: 0.9rem;
+    padding: 0.75rem 1rem;
   }
 }
 
