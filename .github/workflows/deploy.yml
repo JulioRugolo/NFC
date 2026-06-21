@@ -22,6 +22,7 @@ jobs:
           SHA: ${{ github.sha }}
           BEFORE: ${{ github.event.before }}
           TRIGGER_SCRIPT: /opt/jrx/docs/scripts/trigger-coolify-deploy.sh
+          COOLIFY_TOKEN_FILE: /opt/jrx/3dideas/coolify.token
         run: |
           set -euo pipefail
           if [[ ! -x "$TRIGGER_SCRIPT" ]]; then
