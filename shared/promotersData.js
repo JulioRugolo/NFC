@@ -226,7 +226,7 @@ export const RAW_SUPERVISOR_BATCHES = [
     ],
   },
   {
-    supervisor: 'WAGNER MARTINS DA SILVA JUNIOR - 689385',
+    supervisor: 'WAGNER MARTINS - 689385',
     promoters: [
       'ADRIANA FAGUNDES',
       'ANA CLAUDIA',

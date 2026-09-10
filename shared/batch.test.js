@@ -208,6 +208,6 @@ describe('dados embutidos — totais por ZIP esperado', () => {
     assert.equal(counts['PAULA_RAMOS_CUSTODIO_DE_LIMA_714286.zip'], 1)
     assert.equal(counts['RB_WELDER_OLIVEIRA.zip'], 13)
     assert.equal(counts['VALTER_LUIZ_CERRI_374872.zip'], 12)
-    assert.equal(counts['WAGNER_MARTINS_DA_SILVA_JUNIOR_689385.zip'], 21)
+    assert.equal(counts['WAGNER_MARTINS_689385.zip'], 21)
   })
 })
