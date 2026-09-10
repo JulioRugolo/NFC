@@ -161,7 +161,7 @@ describe('batchJobManager mock export', () => {
     const mgr = createBatchJobManager({
       exportKeychain: async ({ name }) => {
         calls += 1
-        if (name === 'FAIL ME') throw new Error('boom')
+        if (name === 'FAIL') throw new Error('boom')
         return { content: Buffer.from('ok'), extension: '3mf', contentType: 'application/3mf' }
       },
     })
