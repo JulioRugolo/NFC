@@ -110,7 +110,8 @@ function KeychainBatchPage() {
           <h1>Lotes de chaveiros por supervisor</h1>
           <p>
             Usa o mesmo gerador OpenSCAD do chaveiro individual. Cada supervisor gera um ZIP
-            com um arquivo 3D por promotor.
+            com um arquivo 3D por promotor. No lote, o <strong>primeiro nome</strong> vai na
+            linha 1 e o <strong>sobrenome</strong> na linha 2.
           </p>
           <div className="batch-mode-nav">
             <Link to="/keychain" className="batch-nav-link">Gerar chaveiro individual</Link>

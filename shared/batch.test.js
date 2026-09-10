@@ -5,6 +5,30 @@ import { sanitizeFilename, supervisorZipBasename, promoterFilename } from '../sh
 import { normalizeBatches, parseSupervisorLabel, supervisorGroupKey } from '../shared/normalizeBatches.js'
 import { RAW_SUPERVISOR_BATCHES } from '../shared/promotersData.js'
 import { createBatchJobManager, previewBuiltinBatches } from '../shared/batchJobManager.js'
+import { splitNameAndSurname } from '../shared/splitNameLines.js'
+
+describe('splitNameAndSurname', () => {
+  it('coloca sobrenome(s) na segunda linha', () => {
+    assert.deepEqual(splitNameAndSurname('CLAUDIA CARDOSOS'), {
+      name: 'CLAUDIA',
+      line2: 'CARDOSOS',
+      show2ndLine: true,
+    })
+    assert.deepEqual(splitNameAndSurname('HELOISA ALVES FERREIRA'), {
+      name: 'HELOISA',
+      line2: 'ALVES FERREIRA',
+      show2ndLine: true,
+    })
+  })
+
+  it('nome único fica só na linha 1', () => {
+    assert.deepEqual(splitNameAndSurname('MADONNA'), {
+      name: 'MADONNA',
+      line2: '',
+      show2ndLine: false,
+    })
+  })
+})
 
 describe('sanitizeFilename', () => {
   it('sanitiza espaços e acentos', () => {

@@ -7,6 +7,7 @@ import { DEFAULT_KEYCHAIN_CONFIG } from './defaultKeychainConfig.js'
 import { normalizeBatches, validateBatches } from './normalizeBatches.js'
 import { promoterFilename } from './sanitizeFilename.js'
 import { RAW_SUPERVISOR_BATCHES } from './promotersData.js'
+import { splitNameAndSurname } from './splitNameLines.js'
 
 const jobs = new Map()
 
@@ -45,7 +46,7 @@ export function createBatchJobManager({ exportKeychain }) {
       workDir,
       warnings,
       summary,
-      config: { ...DEFAULT_KEYCHAIN_CONFIG, ...config, show2ndLine: false, line2: '' },
+      config: { ...DEFAULT_KEYCHAIN_CONFIG, ...config },
       mockExport,
       progress: {
         phase: 'queued',
@@ -119,9 +120,12 @@ export function createBatchJobManager({ exportKeychain }) {
             content = minimalStlBuffer(promoterName)
             extension = 'stl'
           } else {
+            const lines = splitNameAndSurname(promoterName)
             const result = await exportKeychain({
               ...job.config,
-              name: promoterName,
+              name: lines.name,
+              line2: lines.line2,
+              show2ndLine: lines.show2ndLine,
             })
             content = result.content
             extension = result.extension
