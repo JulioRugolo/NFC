@@ -1,7 +1,8 @@
 import { useState, useRef } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import './ConfigPage.css'
 import './KeychainPage.css'
+import './KeychainBatchPage.css'
 import * as THREE from 'three'
 import JSZip from 'jszip'
 import Keychain3DViewer from './Keychain3DViewer'
@@ -726,6 +727,10 @@ ${trianglesXML}        </triangles>
         <header className="keychain-header">
           <h1>🔑 Personalizador de Chaveiro 3D</h1>
           <p>Configure os parâmetros do seu chaveiro personalizado e gere o arquivo para impressão 3D</p>
+          <div className="batch-mode-nav">
+            <span className="batch-nav-current">Gerar chaveiro individual</span>
+            <Link to="/keychain/batch" className="batch-nav-link">Gerar chaveiros por lote</Link>
+          </div>
         </header>
 
         <div className="keychain-layout">

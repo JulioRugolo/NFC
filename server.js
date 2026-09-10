@@ -6,6 +6,7 @@ import { join } from 'path'
 import { tmpdir } from 'os'
 import { randomUUID } from 'crypto'
 import cors from 'cors'
+import { createBatchJobManager, previewBuiltinBatches } from './shared/batchJobManager.js'
 
 const execAsync = promisify(exec)
 const app = express()
@@ -196,6 +197,54 @@ async function exportWithOpenSCAD(openscadPath, outputFile, scadFile, { useXvfb 
   console.log(`✅ Exportado em ${((Date.now() - started) / 1000).toFixed(1)}s (${content.length} bytes) → ${outputFile}`)
   return content
 }
+
+/**
+ * Núcleo reutilizado pela exportação individual e pelos lotes.
+ * Usa o mesmo generateOpenSCAD + OpenSCAD CLI (3MF com fallback STL).
+ */
+async function generateKeychainExport(config) {
+  if (!config?.name) {
+    throw new Error('Nome é obrigatório')
+  }
+
+  const tempId = randomUUID()
+  const tempDir = tmpdir()
+  const scadFile = join(tempDir, `keychain_${tempId}.scad`)
+  const output3mfFile = join(tempDir, `keychain_${tempId}.3mf`)
+  const stlFile = join(tempDir, `keychain_${tempId}.stl`)
+
+  try {
+    const openSCADCode = generateOpenSCAD(config, { fn: OPENSCAD_FN_EXPORT })
+    await writeFile(scadFile, openSCADCode, 'utf8')
+    const { openscadPath } = await findOpenSCAD()
+
+    try {
+      const content = await exportWithOpenSCAD(openscadPath, output3mfFile, scadFile)
+      return {
+        content,
+        extension: '3mf',
+        contentType: 'application/3mf',
+      }
+    } catch (exportErr) {
+      console.log('📦 3MF falhou, tentando STL...', exportErr.message)
+      const content = await exportWithOpenSCAD(openscadPath, stlFile, scadFile)
+      await unlink(output3mfFile).catch(() => {})
+      return {
+        content,
+        extension: 'stl',
+        contentType: 'model/stl',
+      }
+    }
+  } finally {
+    await unlink(scadFile).catch(() => {})
+    setTimeout(() => {
+      unlink(output3mfFile).catch(() => {})
+      unlink(stlFile).catch(() => {})
+    }, 5000)
+  }
+}
+
+const batchJobs = createBatchJobManager({ exportKeychain: generateKeychainExport })
 
 // ========== ROTAS DE API (devem vir ANTES do catch-all) ==========
 
@@ -520,60 +569,19 @@ app.post('/api/generate-preview', async (req, res) => {
 // Rota para gerar SCAD e exportar 3MF (fallback STL)
 app.post('/api/generate-and-export-3mf', async (req, res) => {
   const config = req.body
-  const tempId = randomUUID()
-  const tempDir = tmpdir()
-  const scadFile = join(tempDir, `keychain_${tempId}.scad`)
-  const output3mfFile = join(tempDir, `keychain_${tempId}.3mf`)
-  const stlFile = join(tempDir, `keychain_${tempId}.stl`)
 
   try {
     if (!config.name) {
       return res.status(400).json({ error: 'Nome é obrigatório' })
     }
 
-    const openSCADCode = generateOpenSCAD(config, { fn: OPENSCAD_FN_EXPORT })
-    await writeFile(scadFile, openSCADCode, 'utf8')
-    console.log(`📝 Arquivo OpenSCAD criado (fn=${OPENSCAD_FN_EXPORT}): ${scadFile}`)
-
-    const { openscadPath } = await findOpenSCAD()
-
-    let fileContent = null
-    let contentType = 'application/3mf'
-    let fileExtension = '3mf'
-    let outputFile = output3mfFile
-
-    try {
-      fileContent = await exportWithOpenSCAD(openscadPath, output3mfFile, scadFile)
-    } catch (exportErr) {
-      console.log('📦 3MF falhou, tentando STL...', exportErr.message)
-      try {
-        fileContent = await exportWithOpenSCAD(openscadPath, stlFile, scadFile)
-        contentType = 'model/stl'
-        fileExtension = 'stl'
-        outputFile = stlFile
-        await unlink(output3mfFile).catch(() => {})
-      } catch (stlErr) {
-        const errorDetails = stlErr.stderr || stlErr.message || 'Erro desconhecido'
-        throw new Error(`OpenSCAD execution failed: ${errorDetails}`)
-      }
-    }
-
-    await unlink(scadFile).catch(() => {})
+    const { content, extension, contentType } = await generateKeychainExport(config)
 
     res.setHeader('Content-Type', contentType)
-    res.setHeader('Content-Disposition', `attachment; filename="keychain_${config.name.replace(/\s+/g, '_')}.${fileExtension}"`)
-    res.send(fileContent)
-
-    setTimeout(() => {
-      unlink(outputFile).catch(() => {})
-    }, 5000)
-
+    res.setHeader('Content-Disposition', `attachment; filename="keychain_${config.name.replace(/\s+/g, '_')}.${extension}"`)
+    res.send(content)
   } catch (error) {
     console.error('Erro ao gerar e exportar 3MF:', error)
-
-    await unlink(scadFile).catch(() => {})
-    await unlink(output3mfFile).catch(() => {})
-    await unlink(stlFile).catch(() => {})
 
     const isWindows = process.platform === 'win32'
     const isMac = process.platform === 'darwin'
@@ -594,6 +602,71 @@ app.post('/api/generate-and-export-3mf', async (req, res) => {
       message: error.message,
       hint: hint
     })
+  }
+})
+
+// ========== LOTES POR SUPERVISOR ==========
+
+app.get('/api/batch/keychains/preview', (_req, res) => {
+  const preview = previewBuiltinBatches()
+  res.json({
+    summary: preview.summary,
+    warnings: preview.warnings,
+    lots: preview.lots.map((lot) => ({
+      supervisor: lot.supervisor,
+      code: lot.code,
+      promoterCount: lot.promoters.length,
+      zipFilename: lot.zipFilename,
+      promoters: lot.promoters,
+    })),
+  })
+})
+
+app.post('/api/batch/keychains/start', async (req, res) => {
+  try {
+    const { supervisors, config, mockExport } = req.body || {}
+    const useMock = mockExport === true || process.env.BATCH_MOCK_EXPORT === '1'
+    const started = await batchJobs.startJob({
+      supervisors: Array.isArray(supervisors) && supervisors.length ? supervisors : null,
+      config: config || {},
+      mockExport: useMock,
+    })
+    res.status(202).json(started)
+  } catch (error) {
+    res.status(400).json({
+      error: error.message,
+      details: error.details || null,
+    })
+  }
+})
+
+app.get('/api/batch/keychains/:jobId', (req, res) => {
+  const status = batchJobs.getPublicStatus(req.params.jobId)
+  if (!status) return res.status(404).json({ error: 'Job não encontrado' })
+  res.json(status)
+})
+
+app.get('/api/batch/keychains/:jobId/zip/:zipFilename', async (req, res) => {
+  try {
+    const result = await batchJobs.readLotZip(req.params.jobId, req.params.zipFilename)
+    if (!result) return res.status(404).json({ error: 'ZIP não disponível' })
+    res.setHeader('Content-Type', 'application/zip')
+    res.setHeader('Content-Disposition', `attachment; filename="${result.filename}"`)
+    res.send(result.content)
+  } catch (error) {
+    res.status(500).json({ error: error.message })
+  }
+})
+
+app.get('/api/batch/keychains/:jobId/download-all', async (req, res) => {
+  try {
+    const result = await batchJobs.buildAllZipsBundle(req.params.jobId)
+    if (!result) return res.status(404).json({ error: 'Bundle ainda não disponível' })
+    res.setHeader('Content-Type', 'application/zip')
+    res.setHeader('Content-Disposition', `attachment; filename="${result.filename}"`)
+    res.send(result.content)
+  } catch (error) {
+    res.status(500).json({ error: error.message })
   }
 })
 

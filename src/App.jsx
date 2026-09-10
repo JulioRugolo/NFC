@@ -3,6 +3,7 @@ import { useLocation, Link } from 'react-router-dom'
 import './App.css'
 import ConfigPage from './ConfigPage'
 import KeychainPage from './KeychainPage'
+import KeychainBatchPage from './KeychainBatchPage'
 import Footer from './Footer'
 
 function App() {
@@ -13,6 +14,11 @@ function App() {
     return <ConfigPage />
   }
   
+  // Lotes por supervisor (antes de /keychain exato)
+  if (location.pathname === '/keychain/batch') {
+    return <KeychainBatchPage />
+  }
+
   // Se estiver na rota /keychain, mostra a página de personalização de chaveiro
   if (location.pathname === '/keychain') {
     return <KeychainPage />
@@ -245,6 +251,15 @@ function App() {
                   <h2 className="card-title">Personalizar Chaveiro 3D</h2>
                   <p className="card-description">
                     Crie chaveiros 3D personalizados com texto, cores e estilos únicos
+                  </p>
+                  <div className="card-arrow">→</div>
+                </Link>
+
+                <Link to="/keychain/batch" className="home-card">
+                  <div className="card-icon">📦</div>
+                  <h2 className="card-title">Lotes por Supervisor</h2>
+                  <p className="card-description">
+                    Gere chaveiros em lote para promotores e baixe um ZIP por supervisor
                   </p>
                   <div className="card-arrow">→</div>
                 </Link>

@@ -1,0 +1,22 @@
+/** Defaults iguais ao KeychainPage (geração individual). */
+export const DEFAULT_KEYCHAIN_CONFIG = {
+  line2: '',
+  show2ndLine: false,
+  faceDownMode: false,
+  fontSize: 15,
+  line2Offset: 0,
+  line2VerticalOffset: -15,
+  thickness: 2,
+  textThickness: 1,
+  keychainHoleSize: 4,
+  keychainHoleOffset: 1,
+  edgeRadius: 3,
+  boxWidth: 0,
+  boxHeight: 0,
+  boxXOffset: 0,
+  boxYOffset: -30,
+  font: 'Chewy',
+  fontStyle: 'Black',
+  baseColor: '#4a90e2',
+  textColor: '#ffffff',
+}
