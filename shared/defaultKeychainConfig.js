@@ -1,4 +1,4 @@
-/** Defaults iguais ao KeychainPage (geração individual). */
+/** Defaults do lote: base preta + letra branca (duas cores no 3MF). */
 export const DEFAULT_KEYCHAIN_CONFIG = {
   line2: '',
   show2ndLine: false,
@@ -17,6 +17,6 @@ export const DEFAULT_KEYCHAIN_CONFIG = {
   boxYOffset: -30,
   font: 'Chewy',
   fontStyle: 'Black',
-  baseColor: '#4a90e2',
+  baseColor: '#000000',
   textColor: '#ffffff',
 }

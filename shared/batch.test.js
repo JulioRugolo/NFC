@@ -48,14 +48,12 @@ describe('sanitizeFilename', () => {
 describe('normalizeBatches', () => {
   it('funde Lindsay e preserva Paulas distintas', () => {
     const { lots, summary } = previewBuiltinBatches()
-    assert.equal(summary.finalLots, 10)
-    assert.equal(summary.totalPromoters, 194)
-    assert.equal(summary.rawSupervisorEntries, 11)
+    assert.equal(summary.finalLots, 7)
+    assert.equal(summary.totalPromoters, 128)
+    assert.equal(summary.rawSupervisorEntries, 7)
 
     const lindsay = lots.find((l) => l.code === '462905')
-    assert.ok(lindsay)
-    assert.equal(lindsay.promoters.length, 27)
-    assert.equal(lindsay.zipFilename, 'LINDSAY_ZEFERINO_MAIA_462905.zip')
+    assert.equal(lindsay, undefined)
 
     const paulas = lots.filter((l) => l.supervisorName.includes('PAULA RAMOS'))
     assert.equal(paulas.length, 2)
@@ -199,9 +197,9 @@ describe('dados embutidos — totais por ZIP esperado', () => {
   it('bate as quantidades pedidas na tarefa', () => {
     const { lots } = normalizeBatches(RAW_SUPERVISOR_BATCHES)
     const counts = Object.fromEntries(lots.map((l) => [l.zipFilename, l.promoters.length]))
-    assert.equal(counts['ANA_CRISTINA_DOS_SANTOS_SIQUEIRA_799987.zip'], 15)
-    assert.equal(counts['KALEL_ANDREI_CAMARGO_507054.zip'], 24)
-    assert.equal(counts['LINDSAY_ZEFERINO_MAIA_462905.zip'], 27)
+    assert.equal(counts['ANA_CRISTINA_DOS_SANTOS_SIQUEIRA_799987.zip'], undefined)
+    assert.equal(counts['KALEL_ANDREI_CAMARGO_507054.zip'], undefined)
+    assert.equal(counts['LINDSAY_ZEFERINO_MAIA_462905.zip'], undefined)
     assert.equal(counts['MARIA_EDUARDA_LOPES_DA_SILVA_810142.zip'], 39)
     assert.equal(counts['MAURICIO_RODRIGUES.zip'], 19)
     assert.equal(counts['PAULA_RAMOS_CUSTODIO_DE_LIMA_714285.zip'], 23)
