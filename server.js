@@ -7,6 +7,7 @@ import { tmpdir } from 'os'
 import { randomUUID } from 'crypto'
 import cors from 'cors'
 import { createBatchJobManager, previewBuiltinBatches } from './shared/batchJobManager.js'
+import { buildDualColor3mf } from './shared/buildDualColor3mf.js'
 
 const execAsync = promisify(exec)
 const app = express()
@@ -200,7 +201,8 @@ async function exportWithOpenSCAD(openscadPath, outputFile, scadFile, { useXvfb 
 
 /**
  * Núcleo reutilizado pela exportação individual e pelos lotes.
- * Usa o mesmo generateOpenSCAD + OpenSCAD CLI (3MF com fallback STL).
+ * OpenSCAD 2021 não grava color() no 3MF — exporta base+texto em STL
+ * e monta um 3MF com 2 objetos (base preta / letra branca).
  */
 async function generateKeychainExport(config) {
   if (!config?.name) {
@@ -209,37 +211,50 @@ async function generateKeychainExport(config) {
 
   const tempId = randomUUID()
   const tempDir = tmpdir()
-  const scadFile = join(tempDir, `keychain_${tempId}.scad`)
-  const output3mfFile = join(tempDir, `keychain_${tempId}.3mf`)
-  const stlFile = join(tempDir, `keychain_${tempId}.stl`)
+  const baseScad = join(tempDir, `keychain_base_${tempId}.scad`)
+  const textScad = join(tempDir, `keychain_text_${tempId}.scad`)
+  const baseStl = join(tempDir, `keychain_base_${tempId}.stl`)
+  const textStl = join(tempDir, `keychain_text_${tempId}.stl`)
 
   try {
-    const openSCADCode = generateOpenSCAD(config, { fn: OPENSCAD_FN_EXPORT })
-    await writeFile(scadFile, openSCADCode, 'utf8')
-    const { openscadPath } = await findOpenSCAD()
+    const safeConfig = {
+      ...config,
+      line2: config.line2 || '',
+      show2ndLine: Boolean(config.show2ndLine),
+      baseColor: config.baseColor || '#000000',
+      textColor: config.textColor || '#ffffff',
+    }
 
-    try {
-      const content = await exportWithOpenSCAD(openscadPath, output3mfFile, scadFile)
-      return {
-        content,
-        extension: '3mf',
-        contentType: 'application/3mf',
-      }
-    } catch (exportErr) {
-      console.log('📦 3MF falhou, tentando STL...', exportErr.message)
-      const content = await exportWithOpenSCAD(openscadPath, stlFile, scadFile)
-      await unlink(output3mfFile).catch(() => {})
-      return {
-        content,
-        extension: 'stl',
-        contentType: 'model/stl',
-      }
+    await writeFile(baseScad, generateBaseOnlySCAD(safeConfig, { fn: OPENSCAD_FN_EXPORT }), 'utf8')
+    await writeFile(textScad, generateTextOnlySCAD(safeConfig, { fn: OPENSCAD_FN_EXPORT }), 'utf8')
+
+    const { openscadPath } = await findOpenSCAD()
+    const baseBuf = await exportWithOpenSCAD(openscadPath, baseStl, baseScad)
+    const textBuf = await exportWithOpenSCAD(openscadPath, textStl, textScad)
+
+    const dual = await buildDualColor3mf({
+      baseStl: baseBuf,
+      textStl: textBuf,
+      baseColor: safeConfig.baseColor,
+      textColor: safeConfig.textColor,
+      modelName: safeConfig.name,
+    })
+
+    console.log(
+      `🎨 3MF duas cores: base=${dual.meta.baseTriangles} tris, texto=${dual.meta.textTriangles} tris`
+    )
+
+    return {
+      content: dual.content,
+      extension: dual.extension,
+      contentType: dual.contentType,
     }
   } finally {
-    await unlink(scadFile).catch(() => {})
+    await unlink(baseScad).catch(() => {})
+    await unlink(textScad).catch(() => {})
     setTimeout(() => {
-      unlink(output3mfFile).catch(() => {})
-      unlink(stlFile).catch(() => {})
+      unlink(baseStl).catch(() => {})
+      unlink(textStl).catch(() => {})
     }, 5000)
   }
 }
@@ -254,17 +269,17 @@ app.get('/api/health', (req, res) => {
 })
 
 // Função para gerar OpenSCAD apenas da base (sem texto)
-function generateBaseOnlySCAD(config) {
+function generateBaseOnlySCAD(config, { fn = OPENSCAD_FN_EXPORT } = {}) {
   const { name, line2, show2ndLine, fontSize, keychainHoleSize, keychainHoleOffset, 
           edgeRadius, line2Offset, line2VerticalOffset, boxWidth, boxHeight, 
           boxXOffset, boxYOffset, font, fontStyle, thickness } = config
 
-  const baseRgb = hexToRgb(config.baseColor || '#4a90e2')
+  const baseRgb = hexToRgb(config.baseColor || '#000000')
   
   return `// Parameters - Base Only
-$fn = 50; // Reduzido para melhor performance na visualização
+$fn = ${fn};
 name = "${name.replace(/"/g, '\\"')}";
-line2 = "${line2.replace(/"/g, '\\"')}";
+line2 = "${(line2 || '').replace(/"/g, '\\"')}";
 2ndline = ${show2ndLine};
 fontSize = ${fontSize};
 thickness = ${thickness};
@@ -281,28 +296,29 @@ boxYOffset = ${boxYOffset};
 Font = "${font}";
 FontStyle = "${fontStyle}";
 font = str(Font , ":style=", FontStyle);
+baseColor = [${baseRgb[0]}, ${baseRgb[1]}, ${baseRgb[2]}];
 
 // Base only
-translate([0, 0, 0])
+color(baseColor) translate([0, 0, 0])
     linear_extrude(height = thickness)
         offset(r = r)
             text(name, size = fontSize, valign = "center", halign = "left", font = font);
 
 if (2ndline) {
-    translate([line2Offset, line2VerticalOffset, 0])
+    color(baseColor) translate([line2Offset, line2VerticalOffset, 0])
         linear_extrude(height = thickness)
             offset(r = r)
                 text(line2, size = fontSize, valign = "center", halign = "left", font = font);
 }
 
 if (boxWidth > 0 && boxHeight > 0) {
-    translate([boxXOffset, boxYOffset, 0])
+    color(baseColor) translate([boxXOffset, boxYOffset, 0])
         linear_extrude(height = thickness)
             square([boxWidth, boxHeight], center = false);
 }
 
 difference() {
-    union() {
+    color(baseColor) union() {
         translate([-keychainHoleOffset - 3, 0, 0]) {
             cylinder(h = thickness, d = keychainHoleSize + 3, center = false);
         }
@@ -318,14 +334,16 @@ difference() {
 }
 
 // Função para gerar OpenSCAD apenas do texto (sem base)
-function generateTextOnlySCAD(config) {
+function generateTextOnlySCAD(config, { fn = OPENSCAD_FN_EXPORT } = {}) {
   const { name, line2, show2ndLine, faceDownMode, fontSize, thickness, textThickness,
           line2Offset, line2VerticalOffset, font, fontStyle } = config
 
+  const textRgb = hexToRgb(config.textColor || '#ffffff')
+
   return `// Parameters - Text Only
-$fn = 50; // Reduzido para melhor performance na visualização
+$fn = ${fn};
 name = "${name.replace(/"/g, '\\"')}";
-line2 = "${line2.replace(/"/g, '\\"')}";
+line2 = "${(line2 || '').replace(/"/g, '\\"')}";
 2ndline = ${show2ndLine};
 facedownmode = ${faceDownMode};
 fontSize = ${fontSize};
@@ -337,25 +355,26 @@ line2VerticalOffset = ${line2VerticalOffset};
 Font = "${font}";
 FontStyle = "${fontStyle}";
 font = str(Font , ":style=", FontStyle);
+textColor = [${textRgb[0]}, ${textRgb[1]}, ${textRgb[2]}];
 
 // Text only
 if (facedownmode){
-    translate([0, 0, thickness])
+    color(textColor) translate([0, 0, thickness])
         linear_extrude(height = 0.1)
             text(name, size = fontSize, valign = "center", halign = "left", font = font);
 } else{
-    translate([0, 0, thickness])
+    color(textColor) translate([0, 0, thickness])
         linear_extrude(height = textThickness)
             text(name, size = fontSize, valign = "center", halign = "left", font = font);
 }
 
 if (2ndline) {
     if(facedownmode){
-        translate([line2Offset, line2VerticalOffset, thickness])
+        color(textColor) translate([line2Offset, line2VerticalOffset, thickness])
             linear_extrude(height = 0.1)
                 text(line2, size = fontSize, valign = "center", halign = "left", font = font);
     }else{
-        translate([line2Offset, line2VerticalOffset, thickness])
+        color(textColor) translate([line2Offset, line2VerticalOffset, thickness])
             linear_extrude(height = textThickness)
                 text(line2, size = fontSize, valign = "center", halign = "left", font = font);
     }
@@ -389,8 +408,8 @@ app.post('/api/generate-3d-model', async (req, res) => {
     }
 
     // 1. Gera os arquivos OpenSCAD separados (base e texto)
-    const baseSCADCode = generateBaseOnlySCAD(config)
-    const textSCADCode = generateTextOnlySCAD(config)
+    const baseSCADCode = generateBaseOnlySCAD(config, { fn: OPENSCAD_FN_PREVIEW })
+    const textSCADCode = generateTextOnlySCAD(config, { fn: OPENSCAD_FN_PREVIEW })
     
     await writeFile(baseScadFile, baseSCADCode, 'utf8')
     await writeFile(textScadFile, textSCADCode, 'utf8')
