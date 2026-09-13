@@ -216,29 +216,35 @@ describe('dados embutidos — totais por ZIP esperado', () => {
 })
 
 describe('chaveiros dos supervisores', () => {
-  it('usa nomes curtos com nome composto na linha 1', () => {
+  it('usa os 9 supervisores com nome composto na linha 1', () => {
     const { supervisors, summary } = listSupervisorKeychainTargets()
-    assert.equal(summary.totalSupervisors, 6)
+    assert.equal(summary.totalSupervisors, 9)
     assert.deepEqual(
       supervisors.map((s) => s.name),
       [
+        'ANA CRISTINA SIQUEIRA',
+        'KALEL ANDREI CAMARGO',
+        'LINDSAY ZEFERINO MAIA',
         'MARIA EDUARDA SILVA',
         'MAURICIO RODRIGUES',
-        'PAULA RAMOS LIMA',
-        'WELDER OLIVEIRA',
+        'PAULA LIMA',
         'VALTER LUIZ CERRI',
         'WAGNER MARTINS',
+        'WELDER OLIVEIRA',
       ]
     )
     assert.deepEqual(
       supervisors.map((s) => ({ line1: s.line1, line2: s.line2 })),
       [
+        { line1: 'ANA CRISTINA', line2: 'SIQUEIRA' },
+        { line1: 'KALEL ANDREI', line2: 'CAMARGO' },
+        { line1: 'LINDSAY ZEFERINO', line2: 'MAIA' },
         { line1: 'MARIA EDUARDA', line2: 'SILVA' },
         { line1: 'MAURICIO', line2: 'RODRIGUES' },
-        { line1: 'PAULA', line2: 'RAMOS LIMA' },
-        { line1: 'WELDER', line2: 'OLIVEIRA' },
+        { line1: 'PAULA', line2: 'LIMA' },
         { line1: 'VALTER LUIZ', line2: 'CERRI' },
         { line1: 'WAGNER', line2: 'MARTINS' },
+        { line1: 'WELDER', line2: 'OLIVEIRA' },
       ]
     )
   })
@@ -261,7 +267,7 @@ describe('chaveiros dos supervisores', () => {
     }
 
     assert.equal(status.status, 'completed')
-    assert.equal(status.summary.generated, 6)
+    assert.equal(status.summary.generated, 9)
     assert.equal(status.downloadReady, true)
 
     const zipResult = await mgr.readLotZip(jobId, 'chaveiros_supervisores.zip')
@@ -269,9 +275,12 @@ describe('chaveiros dos supervisores', () => {
     const zip = await JSZip.loadAsync(zipResult.content)
     const names = Object.keys(zip.files).sort()
     assert.deepEqual(names, [
+      'ANA_CRISTINA_SIQUEIRA.stl',
+      'KALEL_ANDREI_CAMARGO.stl',
+      'LINDSAY_ZEFERINO_MAIA.stl',
       'MARIA_EDUARDA_SILVA.stl',
       'MAURICIO_RODRIGUES.stl',
-      'PAULA_RAMOS_LIMA.stl',
+      'PAULA_LIMA.stl',
       'VALTER_LUIZ_CERRI.stl',
       'WAGNER_MARTINS.stl',
       'WELDER_OLIVEIRA.stl',

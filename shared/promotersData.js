@@ -5,14 +5,18 @@
 
 /**
  * Nomes curtos nos chaveiros dos supervisores (linha 1 = nome/composto, linha 2 = sobrenome).
+ * 9 supervisores — inclui Ana Cristina, Kalel e Lindsay (lotes de promotores já impressos).
  */
 export const SUPERVISOR_KEYCHAIN_NAMES = [
+  { line1: 'ANA CRISTINA', line2: 'SIQUEIRA' },
+  { line1: 'KALEL ANDREI', line2: 'CAMARGO' },
+  { line1: 'LINDSAY ZEFERINO', line2: 'MAIA' },
   { line1: 'MARIA EDUARDA', line2: 'SILVA' },
   { line1: 'MAURICIO', line2: 'RODRIGUES' },
-  { line1: 'PAULA', line2: 'RAMOS LIMA' },
-  { line1: 'WELDER', line2: 'OLIVEIRA' },
+  { line1: 'PAULA', line2: 'LIMA' },
   { line1: 'VALTER LUIZ', line2: 'CERRI' },
   { line1: 'WAGNER', line2: 'MARTINS' },
+  { line1: 'WELDER', line2: 'OLIVEIRA' },
 ]
 
 export const RAW_SUPERVISOR_BATCHES = [
