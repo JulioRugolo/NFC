@@ -2,6 +2,19 @@
  * Lista bruta de supervisores/promotores (fonte da planilha).
  * Ana Cristina, Kalel e Lindsay removidos — lotes já impressos.
  */
+
+/**
+ * Nomes curtos nos chaveiros dos supervisores (linha 1 = nome/composto, linha 2 = sobrenome).
+ */
+export const SUPERVISOR_KEYCHAIN_NAMES = [
+  { line1: 'MARIA EDUARDA', line2: 'SILVA' },
+  { line1: 'MAURICIO', line2: 'RODRIGUES' },
+  { line1: 'PAULA', line2: 'RAMOS LIMA' },
+  { line1: 'WELDER', line2: 'OLIVEIRA' },
+  { line1: 'VALTER LUIZ', line2: 'CERRI' },
+  { line1: 'WAGNER', line2: 'MARTINS' },
+]
+
 export const RAW_SUPERVISOR_BATCHES = [
   {
     supervisor: 'MARIA EDUARDA LOPES DA SILVA - 810142',

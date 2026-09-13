@@ -88,8 +88,10 @@ function meshXmlFromTriangles(tris) {
 }
 
 /**
- * Monta 3MF com 2 objetos + basematerials (cores distintas para fatiadores).
- * OpenSCAD 2021 não exporta color() — por isso base e texto entram separados.
+ * Monta 3MF com base + texto em cores distintas, mas como UM único item
+ * no build (assembly via components). Assim o fatiador trata como uma peça
+ * com 2 materiais, em vez de dois objetos soltos que se separam.
+ * OpenSCAD 2021 não exporta color() — meshes entram separados e o 3MF junta.
  */
 export async function buildDualColor3mf({
   baseStl,
@@ -138,10 +140,15 @@ ${textMesh.trisXml}
         </triangles>
       </mesh>
     </object>
+    <object id="3" type="model" name="${safeName}">
+      <components>
+        <component objectid="1" />
+        <component objectid="2" />
+      </components>
+    </object>
   </resources>
   <build>
-    <item objectid="1" />
-    <item objectid="2" />
+    <item objectid="3" />
   </build>
 </model>
 `

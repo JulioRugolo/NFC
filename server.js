@@ -202,7 +202,7 @@ async function exportWithOpenSCAD(openscadPath, outputFile, scadFile, { useXvfb 
 /**
  * Núcleo reutilizado pela exportação individual e pelos lotes.
  * OpenSCAD 2021 não grava color() no 3MF — exporta base+texto em STL
- * e monta um 3MF com 2 objetos (base preta / letra branca).
+ * e monta um 3MF com base + texto em cores distintas (uma peça / assembly).
  */
 async function generateKeychainExport(config) {
   if (!config?.name) {
@@ -642,6 +642,8 @@ app.get('/api/batch/keychains/preview', (_req, res) => {
       summary: preview.supervisorKeychains.summary,
       supervisors: preview.supervisorKeychains.supervisors.map((s) => ({
         name: s.name,
+        line1: s.line1,
+        line2: s.line2,
         filenameBase: s.filenameBase,
       })),
     },

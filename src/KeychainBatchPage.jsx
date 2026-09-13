@@ -137,9 +137,9 @@ function KeychainBatchPage() {
         <section className="batch-section">
           <h2 className="batch-section-title">Chaveiros dos supervisores</h2>
           <p className="batch-section-desc">
-            Gera um ZIP só com os chaveiros dos supervisores: <strong>apenas o nome</strong>
-            (sem código numérico), no mesmo padrão dos promotores — primeiro nome na linha 1,
-            sobrenome na linha 2.
+            Gera um ZIP só com os chaveiros dos supervisores: <strong>nomes curtos</strong>
+            (sem código), nome/nome composto na linha 1 e sobrenome na linha 2. O 3MF sai
+            como <strong>uma peça</strong> com duas cores (base + letra).
           </p>
 
           {supervisorSummary && (
@@ -193,6 +193,11 @@ function KeychainBatchPage() {
                   <tr key={s.filenameBase || s.name}>
                     <td>
                       <div className="batch-supervisor-name">{s.name}</div>
+                      {(s.line1 || s.line2) && (
+                        <div className="batch-zip-name">
+                          Linha 1: {s.line1 || '—'} · Linha 2: {s.line2 || '—'}
+                        </div>
+                      )}
                     </td>
                     <td>
                       <div className="batch-zip-name">

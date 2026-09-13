@@ -1,4 +1,5 @@
 import { sanitizeFilename, supervisorZipBasename } from './sanitizeFilename.js'
+import { SUPERVISOR_KEYCHAIN_NAMES } from './promotersData.js'
 
 /**
  * Extrai nome e código de "NOME - 123456" / "NOME- 123456".
@@ -136,29 +137,23 @@ export function validateBatches(lots) {
 }
 
 /**
- * Lista únicos de supervisores para chaveiro próprio:
- * só o nome (sem código numérico), deduplicado por nome.
- * Ex.: "MARIA EDUARDA LOPES DA SILVA - 810142" → "MARIA EDUARDA LOPES DA SILVA"
+ * Chaveiros dos supervisores: nomes curtos definidos em SUPERVISOR_KEYCHAIN_NAMES.
+ * line1 = nome / nome composto; line2 = sobrenome(s).
  */
-export function listSupervisorKeychainTargets(rawBatches) {
-  const byKey = new Map()
-
-  for (const batch of rawBatches || []) {
-    const parsed = parseSupervisorLabel(batch.supervisor)
-    const name = parsed.name
-    if (!name) continue
-
+export function listSupervisorKeychainTargets(_rawBatches) {
+  const supervisors = SUPERVISOR_KEYCHAIN_NAMES.map(({ line1, line2 }) => {
+    const name = [line1, line2].filter(Boolean).join(' ').replace(/\s+/g, ' ').trim()
     const key = sanitizeFilename(name)
-    if (!key || byKey.has(key)) continue
-
-    byKey.set(key, {
+    return {
       key,
       name,
+      line1,
+      line2: line2 || '',
+      show2ndLine: Boolean(line2),
       filenameBase: key,
-    })
-  }
+    }
+  })
 
-  const supervisors = [...byKey.values()].sort((a, b) => a.name.localeCompare(b.name))
   return {
     supervisors,
     summary: {

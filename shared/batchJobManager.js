@@ -178,16 +178,18 @@ export function createBatchJobManager({ exportKeychain }) {
       warnings: [],
       supervisors: targets.map((t) => ({
         name: t.name,
+        line1: t.line1,
+        line2: t.line2,
         filenameBase: t.filenameBase,
       })),
     }
   }
 
-  async function exportOneName(job, fullName) {
+  async function exportOneName(job, fullName, linesOverride = null) {
     if (job.mockExport) {
       return { content: minimalStlBuffer(fullName), extension: 'stl' }
     }
-    const lines = splitNameAndSurname(fullName)
+    const lines = linesOverride || splitNameAndSurname(fullName)
     return exportKeychain({
       ...job.config,
       name: lines.name,
@@ -293,7 +295,11 @@ export function createBatchJobManager({ exportKeychain }) {
       job.progress.percent = Math.round((i / total) * 100)
 
       try {
-        const { content, extension } = await exportOneName(job, target.name)
+        const { content, extension } = await exportOneName(job, target.name, {
+          name: target.line1 || target.name,
+          line2: target.line2 || '',
+          show2ndLine: target.show2ndLine ?? Boolean(target.line2),
+        })
         const filename = promoterFilename(target.name, extension)
         const filePath = join(outDir, filename)
         await writeFile(filePath, content)
@@ -356,6 +362,8 @@ export function createBatchJobManager({ exportKeychain }) {
         lots: [],
         supervisors: job.supervisorTargets.map((t) => ({
           name: t.name,
+          line1: t.line1,
+          line2: t.line2,
           filenameBase: t.filenameBase,
           filename: t.filename,
           status: t.status,

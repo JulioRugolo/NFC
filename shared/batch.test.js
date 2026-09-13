@@ -216,29 +216,30 @@ describe('dados embutidos — totais por ZIP esperado', () => {
 })
 
 describe('chaveiros dos supervisores', () => {
-  it('lista nomes sem código e deduplica Paulas', () => {
-    const { supervisors, summary } = listSupervisorKeychainTargets(RAW_SUPERVISOR_BATCHES)
+  it('usa nomes curtos com nome composto na linha 1', () => {
+    const { supervisors, summary } = listSupervisorKeychainTargets()
     assert.equal(summary.totalSupervisors, 6)
     assert.deepEqual(
       supervisors.map((s) => s.name),
       [
-        'MARIA EDUARDA LOPES DA SILVA',
+        'MARIA EDUARDA SILVA',
         'MAURICIO RODRIGUES',
-        'PAULA RAMOS CUSTODIO DE LIMA',
-        'RB WELDER OLIVEIRA',
+        'PAULA RAMOS LIMA',
+        'WELDER OLIVEIRA',
         'VALTER LUIZ CERRI',
         'WAGNER MARTINS',
       ]
     )
-    assert.ok(supervisors.every((s) => !/\d/.test(s.name)))
-    assert.ok(supervisors.every((s) => !s.filenameBase.includes('714285')))
-    assert.equal(
-      splitNameAndSurname('MARIA EDUARDA LOPES DA SILVA').name,
-      'MARIA'
-    )
-    assert.equal(
-      splitNameAndSurname('MARIA EDUARDA LOPES DA SILVA').line2,
-      'EDUARDA LOPES DA SILVA'
+    assert.deepEqual(
+      supervisors.map((s) => ({ line1: s.line1, line2: s.line2 })),
+      [
+        { line1: 'MARIA EDUARDA', line2: 'SILVA' },
+        { line1: 'MAURICIO', line2: 'RODRIGUES' },
+        { line1: 'PAULA', line2: 'RAMOS LIMA' },
+        { line1: 'WELDER', line2: 'OLIVEIRA' },
+        { line1: 'VALTER LUIZ', line2: 'CERRI' },
+        { line1: 'WAGNER', line2: 'MARTINS' },
+      ]
     )
   })
 
@@ -268,14 +269,13 @@ describe('chaveiros dos supervisores', () => {
     const zip = await JSZip.loadAsync(zipResult.content)
     const names = Object.keys(zip.files).sort()
     assert.deepEqual(names, [
-      'MARIA_EDUARDA_LOPES_DA_SILVA.stl',
+      'MARIA_EDUARDA_SILVA.stl',
       'MAURICIO_RODRIGUES.stl',
-      'PAULA_RAMOS_CUSTODIO_DE_LIMA.stl',
-      'RB_WELDER_OLIVEIRA.stl',
+      'PAULA_RAMOS_LIMA.stl',
       'VALTER_LUIZ_CERRI.stl',
       'WAGNER_MARTINS.stl',
+      'WELDER_OLIVEIRA.stl',
     ])
-    assert.ok(names.every((n) => !/\d/.test(n.replace(/\.stl$/, ''))))
 
     await mgr.cleanupJob(jobId)
   })
