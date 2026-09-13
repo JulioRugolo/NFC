@@ -638,17 +638,26 @@ app.get('/api/batch/keychains/preview', (_req, res) => {
       zipFilename: lot.zipFilename,
       promoters: lot.promoters,
     })),
+    supervisorKeychains: {
+      summary: preview.supervisorKeychains.summary,
+      supervisors: preview.supervisorKeychains.supervisors.map((s) => ({
+        name: s.name,
+        filenameBase: s.filenameBase,
+      })),
+    },
   })
 })
 
 app.post('/api/batch/keychains/start', async (req, res) => {
   try {
-    const { supervisors, config, mockExport } = req.body || {}
+    const { supervisors, config, mockExport, mode } = req.body || {}
     const useMock = mockExport === true || process.env.BATCH_MOCK_EXPORT === '1'
+    const jobMode = mode === 'supervisors' ? 'supervisors' : 'promoters'
     const started = await batchJobs.startJob({
       supervisors: Array.isArray(supervisors) && supervisors.length ? supervisors : null,
       config: config || {},
       mockExport: useMock,
+      mode: jobMode,
     })
     res.status(202).json(started)
   } catch (error) {

@@ -134,3 +134,35 @@ export function validateBatches(lots) {
   }
   return { ok: errors.length === 0, errors }
 }
+
+/**
+ * Lista únicos de supervisores para chaveiro próprio:
+ * só o nome (sem código numérico), deduplicado por nome.
+ * Ex.: "MARIA EDUARDA LOPES DA SILVA - 810142" → "MARIA EDUARDA LOPES DA SILVA"
+ */
+export function listSupervisorKeychainTargets(rawBatches) {
+  const byKey = new Map()
+
+  for (const batch of rawBatches || []) {
+    const parsed = parseSupervisorLabel(batch.supervisor)
+    const name = parsed.name
+    if (!name) continue
+
+    const key = sanitizeFilename(name)
+    if (!key || byKey.has(key)) continue
+
+    byKey.set(key, {
+      key,
+      name,
+      filenameBase: key,
+    })
+  }
+
+  const supervisors = [...byKey.values()].sort((a, b) => a.name.localeCompare(b.name))
+  return {
+    supervisors,
+    summary: {
+      totalSupervisors: supervisors.length,
+    },
+  }
+}

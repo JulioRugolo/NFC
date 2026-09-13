@@ -2,7 +2,12 @@ import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
 import JSZip from 'jszip'
 import { sanitizeFilename, supervisorZipBasename, promoterFilename } from '../shared/sanitizeFilename.js'
-import { normalizeBatches, parseSupervisorLabel, supervisorGroupKey } from '../shared/normalizeBatches.js'
+import {
+  normalizeBatches,
+  parseSupervisorLabel,
+  supervisorGroupKey,
+  listSupervisorKeychainTargets,
+} from '../shared/normalizeBatches.js'
 import { RAW_SUPERVISOR_BATCHES } from '../shared/promotersData.js'
 import { createBatchJobManager, previewBuiltinBatches } from '../shared/batchJobManager.js'
 import { splitNameAndSurname } from '../shared/splitNameLines.js'
@@ -207,5 +212,71 @@ describe('dados embutidos — totais por ZIP esperado', () => {
     assert.equal(counts['RB_WELDER_OLIVEIRA.zip'], 13)
     assert.equal(counts['VALTER_LUIZ_CERRI_374872.zip'], 12)
     assert.equal(counts['WAGNER_MARTINS_689385.zip'], 21)
+  })
+})
+
+describe('chaveiros dos supervisores', () => {
+  it('lista nomes sem código e deduplica Paulas', () => {
+    const { supervisors, summary } = listSupervisorKeychainTargets(RAW_SUPERVISOR_BATCHES)
+    assert.equal(summary.totalSupervisors, 6)
+    assert.deepEqual(
+      supervisors.map((s) => s.name),
+      [
+        'MARIA EDUARDA LOPES DA SILVA',
+        'MAURICIO RODRIGUES',
+        'PAULA RAMOS CUSTODIO DE LIMA',
+        'RB WELDER OLIVEIRA',
+        'VALTER LUIZ CERRI',
+        'WAGNER MARTINS',
+      ]
+    )
+    assert.ok(supervisors.every((s) => !/\d/.test(s.name)))
+    assert.ok(supervisors.every((s) => !s.filenameBase.includes('714285')))
+    assert.equal(
+      splitNameAndSurname('MARIA EDUARDA LOPES DA SILVA').name,
+      'MARIA'
+    )
+    assert.equal(
+      splitNameAndSurname('MARIA EDUARDA LOPES DA SILVA').line2,
+      'EDUARDA LOPES DA SILVA'
+    )
+  })
+
+  it('gera ZIP único com arquivos só pelo nome', async () => {
+    const mgr = createBatchJobManager({
+      exportKeychain: async () => {
+        throw new Error('não deve chamar OpenSCAD no mock')
+      },
+    })
+
+    const { jobId, mode } = await mgr.startJob({ mode: 'supervisors', mockExport: true })
+    assert.equal(mode, 'supervisors')
+
+    let status
+    for (let i = 0; i < 50; i++) {
+      status = mgr.getPublicStatus(jobId)
+      if (status.status === 'completed' || status.status === 'failed') break
+      await new Promise((r) => setTimeout(r, 50))
+    }
+
+    assert.equal(status.status, 'completed')
+    assert.equal(status.summary.generated, 6)
+    assert.equal(status.downloadReady, true)
+
+    const zipResult = await mgr.readLotZip(jobId, 'chaveiros_supervisores.zip')
+    assert.ok(zipResult)
+    const zip = await JSZip.loadAsync(zipResult.content)
+    const names = Object.keys(zip.files).sort()
+    assert.deepEqual(names, [
+      'MARIA_EDUARDA_LOPES_DA_SILVA.stl',
+      'MAURICIO_RODRIGUES.stl',
+      'PAULA_RAMOS_CUSTODIO_DE_LIMA.stl',
+      'RB_WELDER_OLIVEIRA.stl',
+      'VALTER_LUIZ_CERRI.stl',
+      'WAGNER_MARTINS.stl',
+    ])
+    assert.ok(names.every((n) => !/\d/.test(n.replace(/\.stl$/, ''))))
+
+    await mgr.cleanupJob(jobId)
   })
 })

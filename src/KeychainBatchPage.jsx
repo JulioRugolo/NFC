@@ -55,7 +55,7 @@ function KeychainBatchPage() {
     }
   }, [jobId])
 
-  const startBatch = async () => {
+  const startBatch = async (mode) => {
     setError('')
     setStarting(true)
     setShowProgress(true)
@@ -64,7 +64,7 @@ function KeychainBatchPage() {
       const r = await fetch(`${API_URL}/api/batch/keychains/start`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({}),
+        body: JSON.stringify({ mode }),
       })
       const data = await r.json()
       if (!r.ok) throw new Error(data.error || 'Falha ao iniciar lote')
@@ -84,13 +84,25 @@ function KeychainBatchPage() {
     window.location.href = `${API_URL}/api/batch/keychains/${jobId}/download-all`
   }
 
-  const lots = status?.lots || preview?.lots || []
-  const summary = status?.summary || preview?.summary
+  const promoterLots = status?.mode === 'promoters' ? (status.lots || []) : (preview?.lots || [])
+  const promoterSummary = status?.mode === 'promoters' ? status.summary : preview?.summary
+  const supervisorList = status?.mode === 'supervisors'
+    ? (status.supervisors || [])
+    : (preview?.supervisorKeychains?.supervisors || [])
+  const supervisorSummary = status?.mode === 'supervisors'
+    ? status.summary
+    : preview?.supervisorKeychains?.summary
+
   const progress = status?.progress
   const progressPercent = progress?.percent ?? 0
   const progressMessage = progress
-    ? `${progress.supervisorName || '…'} — ${progress.promoterName || ''} (${progress.promoterIndex || 0}/${progress.promoterTotal || 0})`
+    ? (status?.mode === 'supervisors'
+      ? `Supervisor: ${progress.supervisorName || '…'} (${progress.supervisorIndex || 0}/${progress.supervisorTotal || 0})`
+      : `${progress.supervisorName || '…'} — ${progress.promoterName || ''} (${progress.promoterIndex || 0}/${progress.promoterTotal || 0})`)
     : 'Preparando lotes…'
+
+  const busy = starting || status?.status === 'running' || status?.status === 'queued'
+  const supervisorsDone = status?.mode === 'supervisors' && status?.status === 'completed' && status?.downloadReady
 
   return (
     <div className="keychain-page">
@@ -122,89 +134,186 @@ function KeychainBatchPage() {
 
         {error && <div className="batch-error">{error}</div>}
 
-        {summary && (
-          <div className="batch-summary">
-            <div><strong>Supervisores (lotes finais):</strong> {summary.finalLots}</div>
-            <div><strong>Promotores / chaveiros:</strong> {summary.totalPromoters}</div>
-            {status && (
-              <>
-                <div><strong>Gerados:</strong> {summary.generated ?? 0}</div>
-                <div><strong>Falhas:</strong> {summary.failed ?? 0}</div>
-              </>
+        <section className="batch-section">
+          <h2 className="batch-section-title">Chaveiros dos supervisores</h2>
+          <p className="batch-section-desc">
+            Gera um ZIP só com os chaveiros dos supervisores: <strong>apenas o nome</strong>
+            (sem código numérico), no mesmo padrão dos promotores — primeiro nome na linha 1,
+            sobrenome na linha 2.
+          </p>
+
+          {supervisorSummary && (
+            <div className="batch-summary">
+              <div>
+                <strong>Supervisores (únicos):</strong>{' '}
+                {supervisorSummary.totalSupervisors}
+              </div>
+              {status?.mode === 'supervisors' && (
+                <>
+                  <div><strong>Gerados:</strong> {supervisorSummary.generated ?? 0}</div>
+                  <div><strong>Falhas:</strong> {supervisorSummary.failed ?? 0}</div>
+                </>
+              )}
+            </div>
+          )}
+
+          <div className="batch-actions">
+            <button
+              type="button"
+              className="btn-generate btn-generate-secondary"
+              onClick={() => startBatch('supervisors')}
+              disabled={busy}
+            >
+              {status?.mode === 'supervisors' && status?.status === 'running'
+                ? 'Gerando supervisores…'
+                : 'Gerar chaveiros dos supervisores'}
+            </button>
+            {supervisorsDone && (
+              <button
+                type="button"
+                className="btn-download"
+                onClick={() => downloadZip(status.zipFilename || 'chaveiros_supervisores.zip')}
+              >
+                Baixar ZIP dos supervisores
+              </button>
             )}
+          </div>
+
+          <div className="batch-table-wrap">
+            <table className="batch-table">
+              <thead>
+                <tr>
+                  <th>Supervisor (nome no chaveiro)</th>
+                  <th>Arquivo</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {supervisorList.map((s) => (
+                  <tr key={s.filenameBase || s.name}>
+                    <td>
+                      <div className="batch-supervisor-name">{s.name}</div>
+                    </td>
+                    <td>
+                      <div className="batch-zip-name">
+                        {s.filename || `${s.filenameBase}.3mf`}
+                      </div>
+                    </td>
+                    <td>
+                      {s.status === 'ready' && 'Pronto'}
+                      {s.status === 'generating' && 'Gerando…'}
+                      {s.status === 'failed' && `Falhou${s.failure ? `: ${s.failure}` : ''}`}
+                      {(!s.status || s.status === 'pending') && (
+                        status?.mode === 'supervisors' ? 'Na fila' : 'Aguardando'
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section className="batch-section">
+          <h2 className="batch-section-title">Chaveiros dos promotores (por lote)</h2>
+          <p className="batch-section-desc">
+            Um ZIP por supervisor, com um chaveiro para cada promotor da equipe.
+          </p>
+
+          {promoterSummary && (
+            <div className="batch-summary">
+              <div><strong>Supervisores (lotes finais):</strong> {promoterSummary.finalLots}</div>
+              <div><strong>Promotores / chaveiros:</strong> {promoterSummary.totalPromoters}</div>
+              {status?.mode === 'promoters' && (
+                <>
+                  <div><strong>Gerados:</strong> {promoterSummary.generated ?? 0}</div>
+                  <div><strong>Falhas:</strong> {promoterSummary.failed ?? 0}</div>
+                </>
+              )}
+            </div>
+          )}
+
+          <div className="batch-actions">
+            <button
+              type="button"
+              className="btn-generate"
+              onClick={() => startBatch('promoters')}
+              disabled={busy}
+            >
+              {status?.mode === 'promoters' && status?.status === 'running'
+                ? 'Gerando lotes…'
+                : 'Gerar todos os lotes de promotores'}
+            </button>
+            {status?.mode === 'promoters' && status?.status === 'completed' && (
+              <button type="button" className="btn-download" onClick={downloadAll}>
+                Baixar todos os lotes (.ZIP)
+              </button>
+            )}
+          </div>
+
+          <div className="batch-table-wrap">
+            <table className="batch-table">
+              <thead>
+                <tr>
+                  <th>Supervisor</th>
+                  <th>Qtd</th>
+                  <th>Status</th>
+                  <th>Ação</th>
+                </tr>
+              </thead>
+              <tbody>
+                {promoterLots.map((lot) => (
+                  <tr key={lot.zipFilename}>
+                    <td>
+                      <div className="batch-supervisor-name">{lot.supervisor}</div>
+                      <div className="batch-zip-name">{lot.zipFilename}</div>
+                    </td>
+                    <td>{lot.promoterCount}</td>
+                    <td>
+                      {lot.status === 'ready' && 'Pronto'}
+                      {lot.status === 'partial' && `Parcial (${lot.success} ok / ${lot.failed} falha)`}
+                      {lot.status === 'generating' && 'Gerando…'}
+                      {lot.status === 'failed' && 'Falhou'}
+                      {(!lot.status || lot.status === 'pending') && (
+                        status?.mode === 'promoters' ? 'Na fila' : 'Aguardando'
+                      )}
+                      {lot.failures?.length > 0 && (
+                        <ul className="batch-failures">
+                          {lot.failures.map((f) => (
+                            <li key={f.promoter}>
+                              <strong>{f.promoter}</strong>: {f.reason}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </td>
+                    <td>
+                      {lot.downloadReady && status?.mode === 'promoters' && (
+                        <button
+                          type="button"
+                          className="btn-download-sm"
+                          onClick={() => downloadZip(lot.zipFilename)}
+                        >
+                          Baixar ZIP
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        {status?.status === 'completed' && status?.mode === 'promoters' && (
+          <div className="batch-done">
+            Lotes gerados — baixe os ZIPs acima. Formato: o mesmo do gerador individual (3MF, ou STL se 3MF falhar).
           </div>
         )}
 
-        <div className="batch-actions">
-          <button
-            type="button"
-            className="btn-generate"
-            onClick={startBatch}
-            disabled={starting || status?.status === 'running' || status?.status === 'queued'}
-          >
-            {status?.status === 'running' ? 'Gerando lotes…' : 'Gerar todos os lotes'}
-          </button>
-          {status?.status === 'completed' && (
-            <button type="button" className="btn-download" onClick={downloadAll}>
-              Baixar todos os supervisores (.ZIP)
-            </button>
-          )}
-        </div>
-
-        <div className="batch-table-wrap">
-          <table className="batch-table">
-            <thead>
-              <tr>
-                <th>Supervisor</th>
-                <th>Qtd</th>
-                <th>Status</th>
-                <th>Ação</th>
-              </tr>
-            </thead>
-            <tbody>
-              {lots.map((lot) => (
-                <tr key={lot.zipFilename}>
-                  <td>
-                    <div className="batch-supervisor-name">{lot.supervisor}</div>
-                    <div className="batch-zip-name">{lot.zipFilename}</div>
-                  </td>
-                  <td>{lot.promoterCount}</td>
-                  <td>
-                    {lot.status === 'ready' && 'Pronto'}
-                    {lot.status === 'partial' && `Parcial (${lot.success} ok / ${lot.failed} falha)`}
-                    {lot.status === 'generating' && 'Gerando…'}
-                    {lot.status === 'failed' && 'Falhou'}
-                    {(!lot.status || lot.status === 'pending') && (status ? 'Na fila' : 'Aguardando')}
-                    {lot.failures?.length > 0 && (
-                      <ul className="batch-failures">
-                        {lot.failures.map((f) => (
-                          <li key={f.promoter}>
-                            <strong>{f.promoter}</strong>: {f.reason}
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </td>
-                  <td>
-                    {lot.downloadReady && (
-                      <button
-                        type="button"
-                        className="btn-download-sm"
-                        onClick={() => downloadZip(lot.zipFilename)}
-                      >
-                        Baixar ZIP
-                      </button>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        {status?.status === 'completed' && (
+        {supervisorsDone && (
           <div className="batch-done">
-            Lotes gerados — baixe os ZIPs acima. Formato: o mesmo do gerador individual (3MF, ou STL se 3MF falhar).
+            Chaveiros dos supervisores prontos — nomes sem código numérico, mesmo padrão dos demais.
           </div>
         )}
 

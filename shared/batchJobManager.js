@@ -4,12 +4,18 @@ import { tmpdir } from 'os'
 import { randomUUID } from 'crypto'
 import JSZip from 'jszip'
 import { DEFAULT_KEYCHAIN_CONFIG } from './defaultKeychainConfig.js'
-import { normalizeBatches, validateBatches } from './normalizeBatches.js'
+import {
+  normalizeBatches,
+  validateBatches,
+  listSupervisorKeychainTargets,
+} from './normalizeBatches.js'
 import { promoterFilename } from './sanitizeFilename.js'
 import { RAW_SUPERVISOR_BATCHES } from './promotersData.js'
 import { splitNameAndSurname } from './splitNameLines.js'
 
 const jobs = new Map()
+
+const SUPERVISORS_ZIP = 'chaveiros_supervisores.zip'
 
 function minimalStlBuffer(label) {
   const text = `solid ${label}\nendsolid ${label}\n`
@@ -25,7 +31,15 @@ export function createBatchJobManager({ exportKeychain }) {
     supervisors = null,
     config = {},
     mockExport = process.env.BATCH_MOCK_EXPORT === '1',
+    mode = 'promoters',
   } = {}) {
+    if (mode === 'supervisors') {
+      return startSupervisorJob({ supervisors, config, mockExport })
+    }
+    return startPromoterJob({ supervisors, config, mockExport })
+  }
+
+  async function startPromoterJob({ supervisors, config, mockExport }) {
     const raw = supervisors?.length ? supervisors : RAW_SUPERVISOR_BATCHES
     const { lots, warnings, summary } = normalizeBatches(raw)
     const { ok, errors } = validateBatches(lots)
@@ -41,6 +55,7 @@ export function createBatchJobManager({ exportKeychain }) {
 
     const job = {
       id: jobId,
+      mode: 'promoters',
       status: 'queued',
       createdAt: new Date().toISOString(),
       workDir,
@@ -70,25 +85,118 @@ export function createBatchJobManager({ exportKeychain }) {
         zipPath: null,
         zipFilename: lot.zipFilename,
       })),
+      supervisorTargets: [],
+      supervisorsZipPath: null,
+      supervisorsZipFilename: null,
       error: null,
     }
 
     jobs.set(jobId, job)
-    setImmediate(() => runJob(job).catch((e) => {
+    setImmediate(() => runPromoterJob(job).catch((e) => {
       job.status = 'failed'
       job.error = e.message
       job.progress.phase = 'failed'
     }))
 
-    return { jobId, summary, warnings, lots: lots.map((l) => ({
-      supervisor: l.supervisor,
-      code: l.code,
-      promoterCount: l.promoters.length,
-      zipFilename: l.zipFilename,
-    })) }
+    return {
+      jobId,
+      mode: 'promoters',
+      summary,
+      warnings,
+      lots: lots.map((l) => ({
+        supervisor: l.supervisor,
+        code: l.code,
+        promoterCount: l.promoters.length,
+        zipFilename: l.zipFilename,
+      })),
+    }
   }
 
-  async function runJob(job) {
+  async function startSupervisorJob({ supervisors, config, mockExport }) {
+    const raw = supervisors?.length ? supervisors : RAW_SUPERVISOR_BATCHES
+    const { supervisors: targets, summary } = listSupervisorKeychainTargets(raw)
+
+    if (!targets.length) {
+      const err = new Error('Nenhum supervisor para gerar chaveiro')
+      err.details = []
+      throw err
+    }
+
+    const jobId = randomUUID()
+    const workDir = join(tmpdir(), `nfc-batch-sup-${jobId}`)
+    await mkdir(workDir, { recursive: true })
+
+    const job = {
+      id: jobId,
+      mode: 'supervisors',
+      status: 'queued',
+      createdAt: new Date().toISOString(),
+      workDir,
+      warnings: [],
+      summary: {
+        ...summary,
+        generated: 0,
+        failed: 0,
+      },
+      config: { ...DEFAULT_KEYCHAIN_CONFIG, ...config },
+      mockExport,
+      progress: {
+        phase: 'queued',
+        supervisorIndex: 0,
+        supervisorTotal: targets.length,
+        supervisorName: '',
+        promoterIndex: 0,
+        promoterTotal: targets.length,
+        promoterName: '',
+        generated: 0,
+        failed: 0,
+        percent: 0,
+      },
+      lots: [],
+      supervisorTargets: targets.map((t) => ({
+        ...t,
+        status: 'pending',
+        filename: null,
+        failure: null,
+      })),
+      supervisorsZipPath: null,
+      supervisorsZipFilename: SUPERVISORS_ZIP,
+      error: null,
+    }
+
+    jobs.set(jobId, job)
+    setImmediate(() => runSupervisorJob(job).catch((e) => {
+      job.status = 'failed'
+      job.error = e.message
+      job.progress.phase = 'failed'
+    }))
+
+    return {
+      jobId,
+      mode: 'supervisors',
+      summary,
+      warnings: [],
+      supervisors: targets.map((t) => ({
+        name: t.name,
+        filenameBase: t.filenameBase,
+      })),
+    }
+  }
+
+  async function exportOneName(job, fullName) {
+    if (job.mockExport) {
+      return { content: minimalStlBuffer(fullName), extension: 'stl' }
+    }
+    const lines = splitNameAndSurname(fullName)
+    return exportKeychain({
+      ...job.config,
+      name: lines.name,
+      line2: lines.line2,
+      show2ndLine: lines.show2ndLine,
+    })
+  }
+
+  async function runPromoterJob(job) {
     job.status = 'running'
     job.progress.phase = 'generating'
     const totalPromoters = job.summary.totalPromoters
@@ -113,23 +221,7 @@ export function createBatchJobManager({ exportKeychain }) {
         job.progress.percent = Math.round((doneCount / totalPromoters) * 100)
 
         try {
-          let content
-          let extension
-
-          if (job.mockExport) {
-            content = minimalStlBuffer(promoterName)
-            extension = 'stl'
-          } else {
-            const lines = splitNameAndSurname(promoterName)
-            const result = await exportKeychain({
-              ...job.config,
-              name: lines.name,
-              line2: lines.line2,
-              show2ndLine: lines.show2ndLine,
-            })
-            content = result.content
-            extension = result.extension
-          }
+          const { content, extension } = await exportOneName(job, promoterName)
 
           let filename = promoterFilename(promoterName, extension)
           if (usedFilenames.has(filename)) {
@@ -159,7 +251,6 @@ export function createBatchJobManager({ exportKeychain }) {
         job.progress.percent = Math.round((doneCount / totalPromoters) * 100)
       }
 
-      // ZIP do supervisor mesmo com falhas parciais (se houver algum sucesso)
       if (lot.files.length > 0) {
         const zip = new JSZip()
         for (const file of lot.files) {
@@ -182,6 +273,63 @@ export function createBatchJobManager({ exportKeychain }) {
     job.completedAt = new Date().toISOString()
   }
 
+  async function runSupervisorJob(job) {
+    job.status = 'running'
+    job.progress.phase = 'generating'
+    const total = job.supervisorTargets.length
+    const outDir = join(job.workDir, 'supervisors')
+    await mkdir(outDir, { recursive: true })
+    const files = []
+
+    for (let i = 0; i < total; i++) {
+      const target = job.supervisorTargets[i]
+      target.status = 'generating'
+      job.progress.supervisorIndex = i + 1
+      job.progress.supervisorTotal = total
+      job.progress.supervisorName = target.name
+      job.progress.promoterIndex = i + 1
+      job.progress.promoterTotal = total
+      job.progress.promoterName = target.name
+      job.progress.percent = Math.round((i / total) * 100)
+
+      try {
+        const { content, extension } = await exportOneName(job, target.name)
+        const filename = promoterFilename(target.name, extension)
+        const filePath = join(outDir, filename)
+        await writeFile(filePath, content)
+        target.status = 'ready'
+        target.filename = filename
+        files.push({ name: filename, path: filePath })
+        job.progress.generated += 1
+      } catch (err) {
+        target.status = 'failed'
+        target.failure = err.message || String(err)
+        job.progress.failed += 1
+      }
+
+      job.progress.percent = Math.round(((i + 1) / total) * 100)
+    }
+
+    if (files.length > 0) {
+      const zip = new JSZip()
+      for (const file of files) {
+        zip.file(file.name, await readFile(file.path))
+      }
+      const zipBuf = await zip.generateAsync({ type: 'nodebuffer', compression: 'DEFLATE' })
+      const zipPath = join(job.workDir, SUPERVISORS_ZIP)
+      await writeFile(zipPath, zipBuf)
+      job.supervisorsZipPath = zipPath
+    }
+
+    job.progress.phase = 'done'
+    job.progress.percent = 100
+    job.status = files.length === 0 ? 'failed' : 'completed'
+    if (files.length === 0) {
+      job.error = 'Nenhum chaveiro de supervisor gerado'
+    }
+    job.completedAt = new Date().toISOString()
+  }
+
   function getJob(jobId) {
     return jobs.get(jobId) || null
   }
@@ -189,8 +337,38 @@ export function createBatchJobManager({ exportKeychain }) {
   function getPublicStatus(jobId) {
     const job = jobs.get(jobId)
     if (!job) return null
+
+    if (job.mode === 'supervisors') {
+      return {
+        id: job.id,
+        mode: 'supervisors',
+        status: job.status,
+        error: job.error,
+        createdAt: job.createdAt,
+        completedAt: job.completedAt || null,
+        warnings: job.warnings,
+        summary: {
+          ...job.summary,
+          generated: job.progress.generated,
+          failed: job.progress.failed,
+        },
+        progress: job.progress,
+        lots: [],
+        supervisors: job.supervisorTargets.map((t) => ({
+          name: t.name,
+          filenameBase: t.filenameBase,
+          filename: t.filename,
+          status: t.status,
+          failure: t.failure,
+        })),
+        downloadReady: Boolean(job.supervisorsZipPath),
+        zipFilename: job.supervisorsZipFilename,
+      }
+    }
+
     return {
       id: job.id,
+      mode: 'promoters',
       status: job.status,
       error: job.error,
       createdAt: job.createdAt,
@@ -219,6 +397,17 @@ export function createBatchJobManager({ exportKeychain }) {
   async function readLotZip(jobId, zipFilename) {
     const job = jobs.get(jobId)
     if (!job) return null
+
+    if (job.mode === 'supervisors') {
+      if (!job.supervisorsZipPath) return null
+      const wanted = String(zipFilename || '').replace(/\.zip$/i, '')
+      if (wanted && wanted !== SUPERVISORS_ZIP.replace(/\.zip$/i, '') && zipFilename !== SUPERVISORS_ZIP) {
+        return null
+      }
+      const content = await readFile(job.supervisorsZipPath)
+      return { content, filename: SUPERVISORS_ZIP }
+    }
+
     const lot = job.lots.find((l) => l.zipFilename === zipFilename || l.zipBase === zipFilename.replace(/\.zip$/i, ''))
     if (!lot?.zipPath) return null
     const content = await readFile(lot.zipPath)
@@ -228,6 +417,13 @@ export function createBatchJobManager({ exportKeychain }) {
   async function buildAllZipsBundle(jobId) {
     const job = jobs.get(jobId)
     if (!job || job.status !== 'completed') return null
+
+    if (job.mode === 'supervisors') {
+      if (!job.supervisorsZipPath) return null
+      const content = await readFile(job.supervisorsZipPath)
+      return { content, filename: SUPERVISORS_ZIP }
+    }
+
     const zip = new JSZip()
     let count = 0
     for (const lot of job.lots) {
@@ -251,6 +447,11 @@ export function createBatchJobManager({ exportKeychain }) {
   async function listLotFiles(jobId, zipFilename) {
     const job = jobs.get(jobId)
     if (!job) return null
+
+    if (job.mode === 'supervisors') {
+      return job.supervisorTargets.filter((t) => t.filename).map((t) => t.filename)
+    }
+
     const lot = job.lots.find((l) => l.zipFilename === zipFilename)
     if (!lot) return null
     return lot.files.map((f) => f.name)
@@ -275,5 +476,10 @@ export function createBatchJobManager({ exportKeychain }) {
 }
 
 export function previewBuiltinBatches() {
-  return normalizeBatches(RAW_SUPERVISOR_BATCHES)
+  const promoters = normalizeBatches(RAW_SUPERVISOR_BATCHES)
+  const supervisors = listSupervisorKeychainTargets(RAW_SUPERVISOR_BATCHES)
+  return {
+    ...promoters,
+    supervisorKeychains: supervisors,
+  }
 }
