@@ -135,17 +135,17 @@ function KeychainBatchPage() {
         {error && <div className="batch-error">{error}</div>}
 
         <section className="batch-section">
-          <h2 className="batch-section-title">Chaveiros dos supervisores</h2>
+          <h2 className="batch-section-title">Chaveiros em lote (lista)</h2>
           <p className="batch-section-desc">
-            Gera um ZIP só com os chaveiros dos supervisores: <strong>nomes curtos</strong>
-            (sem código), nome/nome composto na linha 1 e sobrenome na linha 2. O 3MF sai
-            como <strong>uma peça</strong> com duas cores (base + letra).
+            Gera um ZIP com os nomes da lista atual: <strong>nome</strong> na linha 1 e
+            <strong> sobrenome</strong> na linha 2. O 3MF sai como <strong>uma peça</strong> com
+            duas cores (base + letra).
           </p>
 
           {supervisorSummary && (
             <div className="batch-summary">
               <div>
-                <strong>Supervisores (únicos):</strong>{' '}
+                <strong>Nomes no lote:</strong>{' '}
                 {supervisorSummary.totalSupervisors}
               </div>
               {status?.mode === 'supervisors' && (
@@ -165,16 +165,16 @@ function KeychainBatchPage() {
               disabled={busy}
             >
               {status?.mode === 'supervisors' && status?.status === 'running'
-                ? 'Gerando supervisores…'
-                : 'Gerar chaveiros dos supervisores'}
+                ? 'Gerando lote…'
+                : 'Gerar chaveiros do lote'}
             </button>
             {supervisorsDone && (
               <button
                 type="button"
                 className="btn-download"
-                onClick={() => downloadZip(status.zipFilename || 'chaveiros_supervisores.zip')}
+                onClick={() => downloadZip(status.zipFilename || 'chaveiros_lote.zip')}
               >
-                Baixar ZIP dos supervisores
+                Baixar ZIP do lote
               </button>
             )}
           </div>
@@ -183,7 +183,7 @@ function KeychainBatchPage() {
             <table className="batch-table">
               <thead>
                 <tr>
-                  <th>Supervisor (nome no chaveiro)</th>
+                  <th>Nome no chaveiro</th>
                   <th>Arquivo</th>
                   <th>Status</th>
                 </tr>
@@ -318,7 +318,7 @@ function KeychainBatchPage() {
 
         {supervisorsDone && (
           <div className="batch-done">
-            Chaveiros dos supervisores prontos — nomes sem código numérico, mesmo padrão dos demais.
+            Lote de chaveiros pronto — baixe o ZIP acima.
           </div>
         )}
 

@@ -4,19 +4,23 @@
  */
 
 /**
- * Nomes curtos nos chaveiros dos supervisores (linha 1 = nome/composto, linha 2 = sobrenome).
- * 9 supervisores — inclui Ana Cristina, Kalel e Lindsay (lotes de promotores já impressos).
+ * Lista atual para chaveiros em lote (linha 1 = nome, linha 2 = sobrenome).
  */
 export const SUPERVISOR_KEYCHAIN_NAMES = [
-  { line1: 'ANA CRISTINA', line2: 'SIQUEIRA' },
-  { line1: 'KALEL ANDREI', line2: 'CAMARGO' },
-  { line1: 'LINDSAY ZEFERINO', line2: 'MAIA' },
-  { line1: 'MARIA EDUARDA', line2: 'SILVA' },
-  { line1: 'MAURICIO', line2: 'RODRIGUES' },
-  { line1: 'PAULA', line2: 'LIMA' },
-  { line1: 'VALTER LUIZ', line2: 'CERRI' },
-  { line1: 'WAGNER', line2: 'MARTINS' },
+  { line1: 'EVANDRO', line2: 'HENRIQUE' },
+  { line1: 'MALU', line2: 'VALÉRIO' },
   { line1: 'WELDER', line2: 'OLIVEIRA' },
+  { line1: 'TAIS', line2: 'FARIAS' },
+  { line1: 'ANA', line2: 'SIQUEIRA' },
+  { line1: 'PAULA', line2: 'RAMOS' },
+  { line1: 'KALEL', line2: 'CAMARGO' },
+  { line1: 'LINDSAY', line2: 'MAIA' },
+  { line1: 'DUDA', line2: 'LOPES' },
+  { line1: 'MARISA', line2: 'ASSIS' },
+  { line1: 'MAURICIO', line2: 'RODRIGUES' },
+  { line1: 'WAGNER', line2: 'JUNIOR' },
+  { line1: 'GEOVANE', line2: 'SILVA' },
+  { line1: 'JESSICA', line2: 'STRADIOTTI' },
 ]
 
 export const RAW_SUPERVISOR_BATCHES = [

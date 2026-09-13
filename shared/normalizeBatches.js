@@ -137,8 +137,8 @@ export function validateBatches(lots) {
 }
 
 /**
- * Chaveiros dos supervisores: nomes curtos definidos em SUPERVISOR_KEYCHAIN_NAMES.
- * line1 = nome / nome composto; line2 = sobrenome(s).
+ * Chaveiros em lote: nomes definidos em SUPERVISOR_KEYCHAIN_NAMES.
+ * line1 = nome; line2 = sobrenome(s).
  */
 export function listSupervisorKeychainTargets(_rawBatches) {
   const supervisors = SUPERVISOR_KEYCHAIN_NAMES.map(({ line1, line2 }) => {

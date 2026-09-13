@@ -15,7 +15,7 @@ import { splitNameAndSurname } from './splitNameLines.js'
 
 const jobs = new Map()
 
-const SUPERVISORS_ZIP = 'chaveiros_supervisores.zip'
+const SUPERVISORS_ZIP = 'chaveiros_lote.zip'
 
 function minimalStlBuffer(label) {
   const text = `solid ${label}\nendsolid ${label}\n`
