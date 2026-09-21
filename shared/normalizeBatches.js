@@ -138,10 +138,11 @@ export function validateBatches(lots) {
 
 /**
  * Chaveiros em lote: nomes definidos em SUPERVISOR_KEYCHAIN_NAMES.
- * line1 = nome; line2 = sobrenome(s).
+ * line1 / line2 no modelo; cores opcionais por item.
  */
 export function listSupervisorKeychainTargets(_rawBatches) {
-  const supervisors = SUPERVISOR_KEYCHAIN_NAMES.map(({ line1, line2 }) => {
+  const supervisors = SUPERVISOR_KEYCHAIN_NAMES.map((entry) => {
+    const { line1, line2 = '', baseColor, textColor } = entry
     const name = [line1, line2].filter(Boolean).join(' ').replace(/\s+/g, ' ').trim()
     const key = sanitizeFilename(name)
     return {
@@ -151,6 +152,8 @@ export function listSupervisorKeychainTargets(_rawBatches) {
       line2: line2 || '',
       show2ndLine: Boolean(line2),
       filenameBase: key,
+      baseColor: baseColor || null,
+      textColor: textColor || null,
     }
   })
 

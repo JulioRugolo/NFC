@@ -216,31 +216,22 @@ describe('dados embutidos — totais por ZIP esperado', () => {
 })
 
 describe('chaveiros dos supervisores', () => {
-  it('usa a lista atual com nome na linha 1 e sobrenome na linha 2', () => {
+  it('usa Prof. na linha 1 e o nome do professor na linha 2', () => {
     const { supervisors, summary } = listSupervisorKeychainTargets()
-    assert.equal(summary.totalSupervisors, 14)
+    assert.equal(summary.totalSupervisors, 6)
     assert.deepEqual(
-      supervisors.map((s) => s.name),
+      supervisors.map((s) => ({ line1: s.line1, line2: s.line2, name: s.name })),
       [
-        'EVANDRO HENRIQUE',
-        'MALU VALÉRIO',
-        'WELDER OLIVEIRA',
-        'TAIS FARIAS',
-        'ANA SIQUEIRA',
-        'PAULA RAMOS',
-        'KALEL CAMARGO',
-        'LINDSAY MAIA',
-        'DUDA LOPES',
-        'MARISA ASSIS',
-        'MAURICIO RODRIGUES',
-        'WAGNER JUNIOR',
-        'GEOVANE SILVA',
-        'JESSICA STRADIOTTI',
+        { line1: 'Prof.', line2: 'Allan', name: 'Prof. Allan' },
+        { line1: 'Meninas', line2: '', name: 'Meninas' },
+        { line1: 'Prof.', line2: 'Ana', name: 'Prof. Ana' },
+        { line1: 'Prof.', line2: 'Daia', name: 'Prof. Daia' },
+        { line1: 'Prof.', line2: 'Jéssica', name: 'Prof. Jéssica' },
+        { line1: 'Prof.', line2: 'Mariana', name: 'Prof. Mariana' },
       ]
     )
-    assert.equal(supervisors[0].line1, 'EVANDRO')
-    assert.equal(supervisors[0].line2, 'HENRIQUE')
-    assert.equal(supervisors[1].line2, 'VALÉRIO')
+    assert.equal(supervisors[0].baseColor, '#2563eb')
+    assert.equal(supervisors[1].baseColor, '#c084fc')
   })
 
   it('gera ZIP único com arquivos só pelo nome', async () => {
@@ -261,7 +252,7 @@ describe('chaveiros dos supervisores', () => {
     }
 
     assert.equal(status.status, 'completed')
-    assert.equal(status.summary.generated, 14)
+    assert.equal(status.summary.generated, 6)
     assert.equal(status.downloadReady, true)
 
     const zipResult = await mgr.readLotZip(jobId, 'chaveiros_lote.zip')
@@ -269,20 +260,12 @@ describe('chaveiros dos supervisores', () => {
     const zip = await JSZip.loadAsync(zipResult.content)
     const names = Object.keys(zip.files).sort()
     assert.deepEqual(names, [
-      'ANA_SIQUEIRA.stl',
-      'DUDA_LOPES.stl',
-      'EVANDRO_HENRIQUE.stl',
-      'GEOVANE_SILVA.stl',
-      'JESSICA_STRADIOTTI.stl',
-      'KALEL_CAMARGO.stl',
-      'LINDSAY_MAIA.stl',
-      'MALU_VALERIO.stl',
-      'MARISA_ASSIS.stl',
-      'MAURICIO_RODRIGUES.stl',
-      'PAULA_RAMOS.stl',
-      'TAIS_FARIAS.stl',
-      'WAGNER_JUNIOR.stl',
-      'WELDER_OLIVEIRA.stl',
+      'MENINAS.stl',
+      'PROF_ALLAN.stl',
+      'PROF_ANA.stl',
+      'PROF_DAIA.stl',
+      'PROF_JESSICA.stl',
+      'PROF_MARIANA.stl',
     ])
 
     await mgr.cleanupJob(jobId)

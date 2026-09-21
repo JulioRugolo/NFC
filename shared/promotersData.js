@@ -4,23 +4,17 @@
  */
 
 /**
- * Lista atual para chaveiros em lote (linha 1 = nome, linha 2 = sobrenome).
+ * Lista atual para chaveiros em lote.
+ * Professores: linha 1 = "Prof.", linha 2 = nome.
+ * Cores opcionais por item (baseColor / textColor).
  */
 export const SUPERVISOR_KEYCHAIN_NAMES = [
-  { line1: 'EVANDRO', line2: 'HENRIQUE' },
-  { line1: 'MALU', line2: 'VALÉRIO' },
-  { line1: 'WELDER', line2: 'OLIVEIRA' },
-  { line1: 'TAIS', line2: 'FARIAS' },
-  { line1: 'ANA', line2: 'SIQUEIRA' },
-  { line1: 'PAULA', line2: 'RAMOS' },
-  { line1: 'KALEL', line2: 'CAMARGO' },
-  { line1: 'LINDSAY', line2: 'MAIA' },
-  { line1: 'DUDA', line2: 'LOPES' },
-  { line1: 'MARISA', line2: 'ASSIS' },
-  { line1: 'MAURICIO', line2: 'RODRIGUES' },
-  { line1: 'WAGNER', line2: 'JUNIOR' },
-  { line1: 'GEOVANE', line2: 'SILVA' },
-  { line1: 'JESSICA', line2: 'STRADIOTTI' },
+  { line1: 'Prof.', line2: 'Allan', baseColor: '#2563eb', textColor: '#ffffff' },
+  { line1: 'Meninas', line2: '', baseColor: '#c084fc', textColor: '#ffffff' },
+  { line1: 'Prof.', line2: 'Ana' },
+  { line1: 'Prof.', line2: 'Daia' },
+  { line1: 'Prof.', line2: 'Jéssica' },
+  { line1: 'Prof.', line2: 'Mariana' },
 ]
 
 export const RAW_SUPERVISOR_BATCHES = [

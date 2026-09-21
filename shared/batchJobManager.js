@@ -181,17 +181,21 @@ export function createBatchJobManager({ exportKeychain }) {
         line1: t.line1,
         line2: t.line2,
         filenameBase: t.filenameBase,
+        baseColor: t.baseColor,
+        textColor: t.textColor,
       })),
     }
   }
 
-  async function exportOneName(job, fullName, linesOverride = null) {
+  async function exportOneName(job, fullName, linesOverride = null, colorOverride = null) {
     if (job.mockExport) {
       return { content: minimalStlBuffer(fullName), extension: 'stl' }
     }
     const lines = linesOverride || splitNameAndSurname(fullName)
     return exportKeychain({
       ...job.config,
+      ...(colorOverride?.baseColor ? { baseColor: colorOverride.baseColor } : {}),
+      ...(colorOverride?.textColor ? { textColor: colorOverride.textColor } : {}),
       name: lines.name,
       line2: lines.line2,
       show2ndLine: lines.show2ndLine,
@@ -295,11 +299,19 @@ export function createBatchJobManager({ exportKeychain }) {
       job.progress.percent = Math.round((i / total) * 100)
 
       try {
-        const { content, extension } = await exportOneName(job, target.name, {
-          name: target.line1 || target.name,
-          line2: target.line2 || '',
-          show2ndLine: target.show2ndLine ?? Boolean(target.line2),
-        })
+        const { content, extension } = await exportOneName(
+          job,
+          target.name,
+          {
+            name: target.line1 || target.name,
+            line2: target.line2 || '',
+            show2ndLine: target.show2ndLine ?? Boolean(target.line2),
+          },
+          {
+            baseColor: target.baseColor,
+            textColor: target.textColor,
+          }
+        )
         const filename = promoterFilename(target.name, extension)
         const filePath = join(outDir, filename)
         await writeFile(filePath, content)
