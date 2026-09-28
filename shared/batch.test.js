@@ -218,20 +218,13 @@ describe('dados embutidos — totais por ZIP esperado', () => {
 describe('chaveiros dos supervisores', () => {
   it('usa Prof. na linha 1 e o nome do professor na linha 2', () => {
     const { supervisors, summary } = listSupervisorKeychainTargets()
-    assert.equal(summary.totalSupervisors, 6)
+    assert.equal(summary.totalSupervisors, 1)
     assert.deepEqual(
       supervisors.map((s) => ({ line1: s.line1, line2: s.line2, name: s.name })),
       [
-        { line1: 'Prof.', line2: 'Allan', name: 'Prof. Allan' },
-        { line1: 'Meninas', line2: '', name: 'Meninas' },
-        { line1: 'Prof.', line2: 'Ana', name: 'Prof. Ana' },
-        { line1: 'Prof.', line2: 'Daia', name: 'Prof. Daia' },
-        { line1: 'Prof.', line2: 'Jéssica', name: 'Prof. Jéssica' },
-        { line1: 'Prof.', line2: 'Mariana', name: 'Prof. Mariana' },
+        { line1: 'Prof.', line2: 'Alex', name: 'Prof. Alex' },
       ]
     )
-    assert.equal(supervisors[0].baseColor, '#2563eb')
-    assert.equal(supervisors[1].baseColor, '#c084fc')
   })
 
   it('gera ZIP único com arquivos só pelo nome', async () => {
@@ -252,7 +245,7 @@ describe('chaveiros dos supervisores', () => {
     }
 
     assert.equal(status.status, 'completed')
-    assert.equal(status.summary.generated, 6)
+    assert.equal(status.summary.generated, 1)
     assert.equal(status.downloadReady, true)
 
     const zipResult = await mgr.readLotZip(jobId, 'chaveiros_lote.zip')
@@ -260,12 +253,7 @@ describe('chaveiros dos supervisores', () => {
     const zip = await JSZip.loadAsync(zipResult.content)
     const names = Object.keys(zip.files).sort()
     assert.deepEqual(names, [
-      'MENINAS.stl',
-      'PROF_ALLAN.stl',
-      'PROF_ANA.stl',
-      'PROF_DAIA.stl',
-      'PROF_JESSICA.stl',
-      'PROF_MARIANA.stl',
+      'PROF_ALEX.stl',
     ])
 
     await mgr.cleanupJob(jobId)

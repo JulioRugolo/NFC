@@ -9,12 +9,7 @@
  * Cores opcionais por item (baseColor / textColor).
  */
 export const SUPERVISOR_KEYCHAIN_NAMES = [
-  { line1: 'Prof.', line2: 'Allan', baseColor: '#2563eb', textColor: '#ffffff' },
-  { line1: 'Meninas', line2: '', baseColor: '#c084fc', textColor: '#ffffff' },
-  { line1: 'Prof.', line2: 'Ana' },
-  { line1: 'Prof.', line2: 'Daia' },
-  { line1: 'Prof.', line2: 'Jéssica' },
-  { line1: 'Prof.', line2: 'Mariana' },
+  { line1: 'Prof.', line2: 'Alex' },
 ]
 
 export const RAW_SUPERVISOR_BATCHES = [

@@ -138,8 +138,8 @@ function KeychainBatchPage() {
           <h2 className="batch-section-title">Chaveiros em lote (lista)</h2>
           <p className="batch-section-desc">
             Gera um ZIP com os nomes da lista atual. Professores: <strong>Prof.</strong> na
-            linha 1 e o <strong>nome</strong> na linha 2. Allan em azul/branco; Meninas em
-            lilás/branco. O 3MF sai como <strong>uma peça</strong> com duas cores.
+            linha 1 e o <strong>nome</strong> na linha 2. O 3MF sai como <strong>uma peça</strong>
+            com duas cores (base + letra).
           </p>
 
           {supervisorSummary && (
