@@ -216,13 +216,24 @@ describe('dados embutidos — totais por ZIP esperado', () => {
 })
 
 describe('chaveiros dos supervisores', () => {
-  it('usa Prof. na linha 1 e o nome do professor na linha 2', () => {
+  it('usa título na linha 1 e também versão só com o nome', () => {
     const { supervisors, summary } = listSupervisorKeychainTargets()
-    assert.equal(summary.totalSupervisors, 1)
+    assert.equal(summary.totalSupervisors, 12)
     assert.deepEqual(
       supervisors.map((s) => ({ line1: s.line1, line2: s.line2, name: s.name })),
       [
-        { line1: 'Prof.', line2: 'Alex', name: 'Prof. Alex' },
+        { line1: 'Prof.', line2: 'Thaís', name: 'Prof. Thaís' },
+        { line1: 'Prof.', line2: 'Tati', name: 'Prof. Tati' },
+        { line1: 'Prof.', line2: 'Jonas', name: 'Prof. Jonas' },
+        { line1: 'Teacher', line2: 'Edison', name: 'Teacher Edison' },
+        { line1: 'Prof.', line2: 'Toninha', name: 'Prof. Toninha' },
+        { line1: 'Prof.', line2: 'Malu', name: 'Prof. Malu' },
+        { line1: 'Thaís', line2: '', name: 'Thaís' },
+        { line1: 'Tati', line2: '', name: 'Tati' },
+        { line1: 'Jonas', line2: '', name: 'Jonas' },
+        { line1: 'Edison', line2: '', name: 'Edison' },
+        { line1: 'Toninha', line2: '', name: 'Toninha' },
+        { line1: 'Malu', line2: '', name: 'Malu' },
       ]
     )
   })
@@ -245,7 +256,7 @@ describe('chaveiros dos supervisores', () => {
     }
 
     assert.equal(status.status, 'completed')
-    assert.equal(status.summary.generated, 1)
+    assert.equal(status.summary.generated, 12)
     assert.equal(status.downloadReady, true)
 
     const zipResult = await mgr.readLotZip(jobId, 'chaveiros_lote.zip')
@@ -253,7 +264,18 @@ describe('chaveiros dos supervisores', () => {
     const zip = await JSZip.loadAsync(zipResult.content)
     const names = Object.keys(zip.files).sort()
     assert.deepEqual(names, [
-      'PROF_ALEX.stl',
+      'EDISON.stl',
+      'JONAS.stl',
+      'MALU.stl',
+      'PROF_JONAS.stl',
+      'PROF_MALU.stl',
+      'PROF_TATI.stl',
+      'PROF_THAIS.stl',
+      'PROF_TONINHA.stl',
+      'TATI.stl',
+      'TEACHER_EDISON.stl',
+      'THAIS.stl',
+      'TONINHA.stl',
     ])
 
     await mgr.cleanupJob(jobId)

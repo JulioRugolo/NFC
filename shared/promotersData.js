@@ -5,11 +5,22 @@
 
 /**
  * Lista atual para chaveiros em lote.
- * Professores: linha 1 = "Prof.", linha 2 = nome.
+ * Versão com título (Prof./Teacher) + versão só nome.
  * Cores opcionais por item (baseColor / textColor).
  */
 export const SUPERVISOR_KEYCHAIN_NAMES = [
-  { line1: 'Prof.', line2: 'Alex' },
+  { line1: 'Prof.', line2: 'Thaís' },
+  { line1: 'Prof.', line2: 'Tati' },
+  { line1: 'Prof.', line2: 'Jonas' },
+  { line1: 'Teacher', line2: 'Edison' },
+  { line1: 'Prof.', line2: 'Toninha' },
+  { line1: 'Prof.', line2: 'Malu' },
+  { line1: 'Thaís', line2: '' },
+  { line1: 'Tati', line2: '' },
+  { line1: 'Jonas', line2: '' },
+  { line1: 'Edison', line2: '' },
+  { line1: 'Toninha', line2: '' },
+  { line1: 'Malu', line2: '' },
 ]
 
 export const RAW_SUPERVISOR_BATCHES = [
